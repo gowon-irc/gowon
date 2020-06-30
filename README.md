@@ -1,0 +1,2 @@
+# gowon
+gowon irc bot
