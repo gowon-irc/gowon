@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"log"
+	"net"
+	"net/http"
 	"strings"
 
 	"github.com/jessevdk/go-flags"
@@ -35,6 +37,15 @@ func supCommand() string {
 
 func yoCommand() string {
 	return "sup"
+}
+
+type httpHandler struct {
+	conn *irc.Connection
+}
+
+func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	h.conn.Privmsg("#gowon", "hello from http")
+	w.Write([]byte("hello"))
 }
 
 func main() {
@@ -74,6 +85,17 @@ func main() {
 			}
 		}(event)
 	})
+
+	h := httpHandler{irccon}
+
+	l, err := net.Listen("tcp", ":1337")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	go func() {
+		log.Fatal(http.Serve(l, h))
+	}()
 
 	err = irccon.Connect(opts.Server)
 	if err != nil {
