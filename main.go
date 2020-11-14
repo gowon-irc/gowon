@@ -69,8 +69,8 @@ func main() {
 				".yo":  yoCommand,
 			}
 
-			if val, ok := cm[command]; ok {
-				irccon.Privmsg(channel, val())
+			if f, ok := cm[command]; ok {
+				irccon.Privmsg(channel, f())
 			}
 		}(event)
 	})
