@@ -29,6 +29,14 @@ func splitOptArray(sa []string) []string {
 	return out
 }
 
+func supCommand() string {
+	return "yo"
+}
+
+func yoCommand() string {
+	return "sup"
+}
+
 func main() {
 	opts := Options{}
 
@@ -54,9 +62,16 @@ func main() {
 	irccon.AddCallback("PRIVMSG", func(event *irc.Event) {
 		go func(event *irc.Event) {
 			channel := event.Arguments[0]
+			command := event.Arguments[1]
 
-			irccon.Privmsg(channel, "sup")
-			irccon.Privmsg(channel, event.Message())
+			cm := map[string]func() string{
+				".sup": supCommand,
+				".yo":  yoCommand,
+			}
+
+			if val, ok := cm[command]; ok {
+				irccon.Privmsg(channel, val())
+			}
 		}(event)
 	})
 
