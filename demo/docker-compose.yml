@@ -13,10 +13,10 @@ services:
     container_name: compiler
     entrypoint: >
       CompileDaemon
-      -build="go build"
+      -build="go build -o /gowon"
       -directory="/repo"
       -exclude-dir=".git"
-      -command="/repo/gowon"
+      -command="/gowon"
     volumes:
       - ../:/repo
     environment:
@@ -24,3 +24,5 @@ services:
       GOWON_NICK: gowon
       GOWON_USER: gowon
       GOWON_CHANNELS: "#gowon,#gowon2"
+    ports:
+      - 1337:1337
