@@ -7,6 +7,8 @@ import (
 )
 
 func TestSplitOptArray(t *testing.T) {
+	var nilSlice []string
+
 	cases := []struct {
 		name     string
 		arr      []string
@@ -30,6 +32,11 @@ func TestSplitOptArray(t *testing.T) {
 		{
 			name:     "empty list",
 			arr:      []string{},
+			expected: []string{},
+		},
+		{
+			name:     "nil slice",
+			arr:      nilSlice,
 			expected: []string{},
 		},
 	}
