@@ -20,6 +20,7 @@ type Options struct {
 	Verbose  bool     `short:"v" long:"verbose" env:"GOWON_VERBOSE" description:"Verbose logging"`
 	Debug    bool     `short:"d" long:"debug" env:"GOWON_DEBUG" description:"Debug logging"`
 	HTTPPort string   `short:"p" long:"http-port" env:"GOWON_HTTP_PORT" default:"1337" description:"http listen port"`
+	Prefix   string   `short:"P" long:"prefix" env:"GOWON_PREFIX" default:"." description:"prefix for commands"`
 }
 
 func splitOptArray(sa []string) []string {
@@ -81,8 +82,8 @@ func main() {
 			command := event.Arguments[1]
 
 			cm := map[string]func() string{
-				".sup": supCommand,
-				".yo":  yoCommand,
+				opts.Prefix + "sup": supCommand,
+				opts.Prefix + "yo":  yoCommand,
 			}
 
 			if f, ok := cm[command]; ok {
@@ -104,7 +105,7 @@ func main() {
 
 	err = irccon.Connect(opts.Server)
 	if err != nil {
-		fmt.Printf("Err %s", err)
+		log.Fatal(err)
 	}
 
 	irccon.Loop()
