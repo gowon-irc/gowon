@@ -16,7 +16,7 @@ type Options struct {
 	Nick     string   `short:"n" long:"nick" env:"GOWON_NICK" required:"true" description:"Bot nick"`
 	User     string   `short:"u" long:"user" env:"GOWON_USER" required:"true" description:"Bot user"`
 	Channels []string `short:"c" long:"channels" env:"GOWON_CHANNELS" required:"true" description:"Channels to join"`
-	UseTLS   bool     `short:"T" long:"tls" env:"GOWON_TLS" description:"Connect to server using tls"`
+	UseTLS   bool     `short:"T" long:"tls" env:"GOWON_TLS" description:"Connect to irc server using tls"`
 	Verbose  bool     `short:"v" long:"verbose" env:"GOWON_VERBOSE" description:"Verbose logging"`
 	Debug    bool     `short:"d" long:"debug" env:"GOWON_DEBUG" description:"Debug logging"`
 }
@@ -45,7 +45,11 @@ type httpHandler struct {
 
 func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	h.conn.Privmsg("#gowon", "hello from http")
-	w.Write([]byte("hello"))
+
+	_, err := w.Write([]byte("hello"))
+	if err != nil {
+		log.Println(err)
+	}
 }
 
 func main() {
