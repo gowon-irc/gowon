@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/name: oragono
+  name: oragono
+spec:
+  containers:
+    - name: oragono
+      image: oragono/oragono
+      ports:
+        - containerPort: 6667
+          name: ircd

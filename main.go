@@ -1,10 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"log"
-	"net"
-	"net/http"
 	"strings"
 
 	"github.com/jessevdk/go-flags"
@@ -19,8 +16,8 @@ type Options struct {
 	UseTLS   bool     `short:"T" long:"tls" env:"GOWON_TLS" description:"Connect to irc server using tls"`
 	Verbose  bool     `short:"v" long:"verbose" env:"GOWON_VERBOSE" description:"Verbose logging"`
 	Debug    bool     `short:"d" long:"debug" env:"GOWON_DEBUG" description:"Debug logging"`
-	HTTPPort string   `short:"p" long:"http-port" env:"GOWON_HTTP_PORT" default:"1337" description:"http listen port"`
 	Prefix   string   `short:"P" long:"prefix" env:"GOWON_PREFIX" default:"." description:"prefix for commands"`
+	Broker   string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
 }
 
 func splitOptArray(sa []string) []string {
@@ -39,19 +36,6 @@ func supCommand() string {
 
 func yoCommand() string {
 	return "sup"
-}
-
-type httpHandler struct {
-	conn *irc.Connection
-}
-
-func (h httpHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	h.conn.Privmsg("#gowon", "hello from http")
-
-	_, err := w.Write([]byte("hello"))
-	if err != nil {
-		log.Println(err)
-	}
 }
 
 func main() {
@@ -91,17 +75,6 @@ func main() {
 			}
 		}(event)
 	})
-
-	h := httpHandler{irccon}
-
-	l, err := net.Listen("tcp", fmt.Sprintf(":%s", opts.HTTPPort))
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	go func() {
-		log.Fatal(http.Serve(l, h))
-	}()
 
 	err = irccon.Connect(opts.Server)
 	if err != nil {

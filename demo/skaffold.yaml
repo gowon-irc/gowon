@@ -1,0 +1,11 @@
+---
+apiVersion: skaffold/v2beta16
+kind: Config
+build:
+  artifacts:
+    - image: gowon
+      context: ./..
+deploy:
+  kubectl:
+    manifests:
+      - kube/*

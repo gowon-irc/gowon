@@ -1,0 +1,14 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    app.kubernetes.io/name: mosquitto
+  name: mosquitto
+spec:
+  containers:
+    - name: mosquitto
+      image: eclipse-mosquitto
+      ports:
+        - containerPort: 1883
+          name: mqtt
