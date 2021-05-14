@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"log"
 
+	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jessevdk/go-flags"
 	irc "github.com/thoj/go-ircevent"
 )
@@ -35,6 +37,14 @@ func main() {
 		log.Fatal(err)
 	}
 
+	mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("tcp://%s", opts.Broker))
+	mqttOpts.SetClientID("gowon")
+
+	c := mqtt.NewClient(mqttOpts)
+	if token := c.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+
 	irccon := irc.IRC(opts.Nick, opts.User)
 
 	irccon.VerboseCallbackHandler = opts.Verbose
@@ -59,6 +69,7 @@ func main() {
 
 			if f, ok := cm[command]; ok {
 				irccon.Privmsg(channel, f())
+				c.Publish("/test/a", 0, false, f())
 			}
 		}(event)
 	})
