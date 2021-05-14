@@ -5,7 +5,9 @@ build:
   artifacts:
     - image: gowon
       context: ./..
+      docker:
+        dockerfile: Dockerfile
 deploy:
   kubectl:
     manifests:
-      - kube/*
+      - "kube/*"
