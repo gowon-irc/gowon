@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 
@@ -21,12 +22,10 @@ type Options struct {
 	Broker   string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
 }
 
-func supCommand() string {
-	return "yo"
-}
-
-func yoCommand() string {
-	return "sup"
+type message struct {
+	Msg     string `json:"msg"`
+	Nick    string `json:"nick,omitempty"`
+	Channel string `json:"channel"`
 }
 
 func main() {
@@ -46,7 +45,6 @@ func main() {
 	}
 
 	irccon := irc.IRC(opts.Nick, opts.User)
-
 	irccon.VerboseCallbackHandler = opts.Verbose
 	irccon.Debug = opts.Debug
 	irccon.UseTLS = opts.UseTLS
@@ -59,18 +57,15 @@ func main() {
 
 	irccon.AddCallback("PRIVMSG", func(event *irc.Event) {
 		go func(event *irc.Event) {
-			channel := event.Arguments[0]
-			command := event.Arguments[1]
-
-			cm := map[string]func() string{
-				opts.Prefix + "sup": supCommand,
-				opts.Prefix + "yo":  yoCommand,
+			m := &message{
+				Channel: event.Arguments[0],
+				Msg:     event.Arguments[1],
+				Nick:    event.Nick,
 			}
 
-			if f, ok := cm[command]; ok {
-				irccon.Privmsg(channel, f())
-				c.Publish("/test/a", 0, false, f())
-			}
+			msg, _ := json.Marshal(m)
+
+			c.Publish("/gowon/input", 0, false, msg)
 		}(event)
 	})
 
