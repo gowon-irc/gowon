@@ -23,9 +23,9 @@ type Options struct {
 }
 
 type message struct {
-	Msg     string `json:"msg"`
-	Nick    string `json:"nick,omitempty"`
-	Channel string `json:"channel"`
+	Msg  string `json:"msg"`
+	Nick string `json:"nick,omitempty"`
+	Dest string `json:"channel"`
 }
 
 func main() {
@@ -58,15 +58,38 @@ func main() {
 	irccon.AddCallback("PRIVMSG", func(event *irc.Event) {
 		go func(event *irc.Event) {
 			m := &message{
-				Channel: event.Arguments[0],
-				Msg:     event.Arguments[1],
-				Nick:    event.Nick,
+				Dest: event.Arguments[0],
+				Msg:  event.Arguments[1],
+				Nick: event.Nick,
 			}
 
-			msg, _ := json.Marshal(m)
+			msgJSON, _ := json.Marshal(m)
 
-			c.Publish("/gowon/input", 0, false, msg)
+			c.Publish("/gowon/input", 0, false, msgJSON)
 		}(event)
+	})
+
+	c.Subscribe("/gowon/output", 0, func(client mqtt.Client, msg mqtt.Message) {
+		ircMsg := message{}
+
+		err = json.Unmarshal(msg.Payload(), &ircMsg)
+		if err != nil {
+			log.Printf("Error: %s could not be parsed as message json", msg.Payload())
+
+			return
+		}
+
+		if ircMsg.Msg == "" {
+			log.Printf("Error: message %s does not contain any message content", msg.Payload())
+
+			return
+		}
+
+		if ircMsg.Dest == "" {
+			log.Printf("Error: message %s does not contain a destination", msg.Payload())
+		}
+
+		irccon.Privmsg(ircMsg.Dest, ircMsg.Msg)
 	})
 
 	err = irccon.Connect(opts.Server)
