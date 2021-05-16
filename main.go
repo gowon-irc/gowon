@@ -47,11 +47,27 @@ func createMessageStruct(body []byte) (m message, err error) {
 	return m, nil
 }
 
+func createMessageBody(dest, msg, nick string) (body []byte, err error) {
+	m := &message{
+		Dest: dest,
+		Msg:  msg,
+		Nick: nick,
+	}
+
+	body, err = json.Marshal(m)
+	if err != nil {
+		return body, errors.Unwrap(err)
+	}
+
+	return body, nil
+}
+
 func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
 		m, err := createMessageStruct(msg.Payload())
 		if err != nil {
 			log.Print(err)
+
 			return
 		}
 
@@ -88,15 +104,14 @@ func main() {
 
 	irccon.AddCallback("PRIVMSG", func(event *irc.Event) {
 		go func(event *irc.Event) {
-			m := &message{
-				Dest: event.Arguments[0],
-				Msg:  event.Arguments[1],
-				Nick: event.Nick,
+			mj, err := createMessageBody(event.Arguments[0], event.Arguments[1], event.Nick)
+			if err != nil {
+				log.Print(err)
+
+				return
 			}
 
-			msgJSON, _ := json.Marshal(m)
-
-			c.Publish("/gowon/input", 0, false, msgJSON)
+			c.Publish("/gowon/input", 0, false, mj)
 		}(event)
 	})
 
