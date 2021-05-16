@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"log"
 
+	"github.com/pkg/errors"
+
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jessevdk/go-flags"
 	irc "github.com/thoj/go-ircevent"
@@ -28,30 +30,32 @@ type message struct {
 	Dest string `json:"channel"`
 }
 
+func createMessageStruct(body []byte) (m message, err error) {
+	err = json.Unmarshal(body, &m)
+	if err != nil {
+		return m, errors.Wrap(err, "message couldn't be parsed as message json")
+	}
+
+	if m.Msg == "" {
+		return m, errors.New("message body does not contain any message content")
+	}
+
+	if m.Dest == "" {
+		return m, errors.New("message body does not contain a destination")
+	}
+
+	return m, nil
+}
+
 func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
-		ircMsg := message{}
-
-		err := json.Unmarshal(msg.Payload(), &ircMsg)
+		m, err := createMessageStruct(msg.Payload())
 		if err != nil {
-			log.Printf("Error: %s could not be parsed as message json", msg.Payload())
-
+			log.Print(err)
 			return
 		}
 
-		if ircMsg.Msg == "" {
-			log.Printf("Error: message %s does not contain any message content", msg.Payload())
-
-			return
-		}
-
-		if ircMsg.Dest == "" {
-			log.Printf("Error: message %s does not contain a destination", msg.Payload())
-
-			return
-		}
-
-		irccon.Privmsg(ircMsg.Dest, ircMsg.Msg)
+		irccon.Privmsg(m.Dest, m.Msg)
 	}
 }
 
