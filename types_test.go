@@ -22,12 +22,12 @@ func TestCreateMessageStructErrors(t *testing.T) {
 		{
 			name:   "No content",
 			body:   []byte(`{"dest": "d"}`),
-			errMsg: "message body does not contain any message content",
+			errMsg: ErrorMessageNoBodyMsg,
 		},
 		{
 			name:   "No destination",
 			body:   []byte(`{"msg": "m"}`),
-			errMsg: "message body does not contain a destination",
+			errMsg: ErrorMessageNoDestinationMsg,
 		},
 	}
 

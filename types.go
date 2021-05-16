@@ -12,18 +12,22 @@ type message struct {
 	Dest string `json:"dest"`
 }
 
+const ErrorMessageParseMsg = "message couldn't be parsed as message json"
+const ErrorMessageNoBodyMsg = "message body does not contain any message content"
+const ErrorMessageNoDestinationMsg = "message body does not contain a destination"
+
 func createMessageStruct(body []byte) (m message, err error) {
 	err = json.Unmarshal(body, &m)
 	if err != nil {
-		return m, errors.Wrap(err, "message couldn't be parsed as message json")
+		return m, errors.Wrap(err, ErrorMessageParseMsg)
 	}
 
 	if m.Msg == "" {
-		return m, errors.New("message body does not contain any message content")
+		return m, errors.New(ErrorMessageNoBodyMsg)
 	}
 
 	if m.Dest == "" {
-		return m, errors.New("message body does not contain a destination")
+		return m, errors.New(ErrorMessageNoDestinationMsg)
 	}
 
 	return m, nil
