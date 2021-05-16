@@ -28,6 +28,33 @@ type message struct {
 	Dest string `json:"channel"`
 }
 
+func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
+	return func(client mqtt.Client, msg mqtt.Message) {
+		ircMsg := message{}
+
+		err := json.Unmarshal(msg.Payload(), &ircMsg)
+		if err != nil {
+			log.Printf("Error: %s could not be parsed as message json", msg.Payload())
+
+			return
+		}
+
+		if ircMsg.Msg == "" {
+			log.Printf("Error: message %s does not contain any message content", msg.Payload())
+
+			return
+		}
+
+		if ircMsg.Dest == "" {
+			log.Printf("Error: message %s does not contain a destination", msg.Payload())
+
+			return
+		}
+
+		irccon.Privmsg(ircMsg.Dest, ircMsg.Msg)
+	}
+}
+
 func main() {
 	opts := Options{}
 
@@ -69,28 +96,8 @@ func main() {
 		}(event)
 	})
 
-	c.Subscribe("/gowon/output", 0, func(client mqtt.Client, msg mqtt.Message) {
-		ircMsg := message{}
-
-		err = json.Unmarshal(msg.Payload(), &ircMsg)
-		if err != nil {
-			log.Printf("Error: %s could not be parsed as message json", msg.Payload())
-
-			return
-		}
-
-		if ircMsg.Msg == "" {
-			log.Printf("Error: message %s does not contain any message content", msg.Payload())
-
-			return
-		}
-
-		if ircMsg.Dest == "" {
-			log.Printf("Error: message %s does not contain a destination", msg.Payload())
-		}
-
-		irccon.Privmsg(ircMsg.Dest, ircMsg.Msg)
-	})
+	msgHandler := createMessageHandler(irccon)
+	c.Subscribe("/gowon/output", 0, msgHandler)
 
 	err = irccon.Connect(opts.Server)
 	if err != nil {
