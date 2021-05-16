@@ -1,11 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-
-	"github.com/pkg/errors"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jessevdk/go-flags"
@@ -22,44 +19,6 @@ type Options struct {
 	Debug    bool     `short:"d" long:"debug" env:"GOWON_DEBUG" description:"Debug logging"`
 	Prefix   string   `short:"P" long:"prefix" env:"GOWON_PREFIX" default:"." description:"prefix for commands"`
 	Broker   string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
-}
-
-type message struct {
-	Msg  string `json:"msg"`
-	Nick string `json:"nick,omitempty"`
-	Dest string `json:"channel"`
-}
-
-func createMessageStruct(body []byte) (m message, err error) {
-	err = json.Unmarshal(body, &m)
-	if err != nil {
-		return m, errors.Wrap(err, "message couldn't be parsed as message json")
-	}
-
-	if m.Msg == "" {
-		return m, errors.New("message body does not contain any message content")
-	}
-
-	if m.Dest == "" {
-		return m, errors.New("message body does not contain a destination")
-	}
-
-	return m, nil
-}
-
-func createMessageBody(dest, msg, nick string) (body []byte, err error) {
-	m := &message{
-		Dest: dest,
-		Msg:  msg,
-		Nick: nick,
-	}
-
-	body, err = json.Marshal(m)
-	if err != nil {
-		return body, errors.Unwrap(err)
-	}
-
-	return body, nil
 }
 
 func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
