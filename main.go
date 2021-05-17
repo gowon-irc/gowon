@@ -6,6 +6,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/jessevdk/go-flags"
+	"github.com/shanedabes/gowon/pkg/message"
 	irc "github.com/thoj/go-ircevent"
 )
 
@@ -23,7 +24,7 @@ type Options struct {
 
 func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
-		m, err := createMessageStruct(msg.Payload())
+		m, err := message.CreateMessageStruct(msg.Payload())
 		if err != nil {
 			log.Print(err)
 
@@ -63,7 +64,7 @@ func main() {
 
 	irccon.AddCallback("PRIVMSG", func(event *irc.Event) {
 		go func(event *irc.Event) {
-			mj, err := createMessageBody(event.Arguments[0], event.Arguments[1], event.Nick)
+			mj, err := message.CreateMessageBody(event.Arguments[0], event.Arguments[1], event.Nick)
 			if err != nil {
 				log.Print(err)
 

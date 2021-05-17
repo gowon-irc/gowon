@@ -1,4 +1,4 @@
-package main
+package message
 
 import (
 	"testing"
@@ -8,7 +8,7 @@ import (
 
 func TestCreateMessageStructNoError(t *testing.T) {
 	body := []byte(`{"msg": "m", "nick": "n", "dest": "d"}`)
-	_, err := createMessageStruct(body)
+	_, err := CreateMessageStruct(body)
 
 	assert.Nil(t, err)
 }
@@ -33,7 +33,7 @@ func TestCreateMessageStructErrors(t *testing.T) {
 
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, err := createMessageStruct(tc.body)
+			_, err := CreateMessageStruct(tc.body)
 			assert.EqualError(t, err, tc.errMsg)
 		})
 	}

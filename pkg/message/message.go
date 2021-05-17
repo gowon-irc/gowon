@@ -1,4 +1,4 @@
-package main
+package message
 
 import (
 	"encoding/json"
@@ -16,7 +16,7 @@ const ErrorMessageParseMsg = "message couldn't be parsed as message json"
 const ErrorMessageNoBodyMsg = "message body does not contain any message content"
 const ErrorMessageNoDestinationMsg = "message body does not contain a destination"
 
-func createMessageStruct(body []byte) (m message, err error) {
+func CreateMessageStruct(body []byte) (m message, err error) {
 	err = json.Unmarshal(body, &m)
 	if err != nil {
 		return m, errors.Wrap(err, ErrorMessageParseMsg)
@@ -33,7 +33,7 @@ func createMessageStruct(body []byte) (m message, err error) {
 	return m, nil
 }
 
-func createMessageBody(dest, msg, nick string) (body []byte, err error) {
+func CreateMessageBody(dest, msg, nick string) (body []byte, err error) {
 	m := &message{
 		Dest: dest,
 		Msg:  msg,
