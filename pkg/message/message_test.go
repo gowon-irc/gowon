@@ -38,3 +38,52 @@ func TestCreateMessageStructErrors(t *testing.T) {
 		})
 	}
 }
+
+var testCommandTestCases = []struct {
+	name    string
+	message Message
+	command string
+	args    string
+}{
+	{
+		name: "Command with args",
+		message: Message{
+			Msg: ".command command args",
+		},
+		command: "command",
+		args:    "command args",
+	},
+	{
+		name: "No command",
+		message: Message{
+			Msg: "command args",
+		},
+		command: "",
+		args:    "command args",
+	},
+	{
+		name: "Args without command",
+		message: Message{
+			Msg: "args without command",
+		},
+		command: "",
+		args:    "args without command",
+	},
+}
+
+func TestMessageGetCommand(t *testing.T) {
+
+	for _, tc := range testCommandTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.command, tc.message.GetCommand())
+		})
+	}
+}
+
+func TestMessageGetArgs(t *testing.T) {
+	for _, tc := range testCommandTestCases {
+		t.Run(tc.name, func(t *testing.T) {
+			assert.Equal(t, tc.args, tc.message.GetArgs())
+		})
+	}
+}

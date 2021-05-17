@@ -2,6 +2,7 @@ package message
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/pkg/errors"
 )
@@ -10,6 +11,22 @@ type Message struct {
 	Msg  string `json:"msg"`
 	Nick string `json:"nick,omitempty"`
 	Dest string `json:"dest"`
+}
+
+func (m *Message) GetCommand() string {
+	if strings.HasPrefix(m.Msg, ".") {
+		return strings.TrimPrefix(strings.Fields(m.Msg)[0], ".")
+	}
+
+	return ""
+}
+
+func (m *Message) GetArgs() string {
+	if !strings.HasPrefix(m.Msg, ".") {
+		return m.Msg
+	}
+
+	return strings.TrimSpace(strings.TrimPrefix(m.Msg, strings.Fields(m.Msg)[0]))
 }
 
 const ErrorMessageParseMsg = "message couldn't be parsed as message json"
