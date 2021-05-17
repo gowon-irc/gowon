@@ -6,17 +6,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-type message struct {
+type Message struct {
 	Msg  string `json:"msg"`
 	Nick string `json:"nick,omitempty"`
 	Dest string `json:"dest"`
 }
 
 const ErrorMessageParseMsg = "message couldn't be parsed as message json"
+
 const ErrorMessageNoBodyMsg = "message body does not contain any message content"
+
 const ErrorMessageNoDestinationMsg = "message body does not contain a destination"
 
-func CreateMessageStruct(body []byte) (m message, err error) {
+func CreateMessageStruct(body []byte) (m Message, err error) {
 	err = json.Unmarshal(body, &m)
 	if err != nil {
 		return m, errors.Wrap(err, ErrorMessageParseMsg)
@@ -34,7 +36,7 @@ func CreateMessageStruct(body []byte) (m message, err error) {
 }
 
 func CreateMessageBody(dest, msg, nick string) (body []byte, err error) {
-	m := &message{
+	m := &Message{
 		Dest: dest,
 		Msg:  msg,
 		Nick: nick,
