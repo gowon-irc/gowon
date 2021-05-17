@@ -5,8 +5,8 @@ import (
 	"log"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/gowon-irc/gowon/pkg/message"
 	"github.com/jessevdk/go-flags"
-	"github.com/shanedabes/gowon/pkg/message"
 	irc "github.com/thoj/go-ircevent"
 )
 

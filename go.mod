@@ -1,4 +1,4 @@
-module github.com/shanedabes/gowon
+module github.com/gowon-irc/gowon
 
 go 1.16
 
