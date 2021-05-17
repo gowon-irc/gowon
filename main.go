@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/gowon-irc/gowon/pkg/message"
@@ -21,6 +22,8 @@ type Options struct {
 	Prefix   string   `short:"P" long:"prefix" env:"GOWON_PREFIX" default:"." description:"prefix for commands"`
 	Broker   string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
 }
+
+const mqttConnectRetryInternal = 5 * time.Second
 
 func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
@@ -45,6 +48,8 @@ func main() {
 
 	mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("tcp://%s", opts.Broker))
 	mqttOpts.SetClientID("gowon")
+	mqttOpts.SetConnectRetry(true)
+	mqttOpts.SetConnectRetryInterval(mqttConnectRetryInternal)
 
 	c := mqtt.NewClient(mqttOpts)
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
