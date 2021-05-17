@@ -11,6 +11,10 @@ build:
       context: module1
       docker:
         dockerfile: Dockerfile
+    - image: module2
+      context: module2
+      docker:
+        dockerfile: Dockerfile
 deploy:
   kubectl:
     manifests:
