@@ -1,0 +1,19 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: tiny
+  labels:
+    app.kubernetes.io/name: tiny
+spec:
+  containers:
+    - name: tiny
+      image: tiny
+      volumeMounts:
+        - name: tiny-config
+          mountPath: /tiny.yml
+          subPath: tiny.yml
+  volumes:
+    - name: tiny-config
+      configMap:
+        name: tiny-config

@@ -15,6 +15,10 @@ build:
       context: module2
       docker:
         dockerfile: Dockerfile
+    - image: tiny
+      context: .
+      docker:
+        dockerfile: tiny.Dockerfile
 deploy:
   kubectl:
     manifests:
