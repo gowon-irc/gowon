@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -34,8 +35,10 @@ func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
 			return
 		}
 
-		coloured := colourMsg(m.Msg)
-		irccon.Privmsg(m.Dest, coloured)
+		for _, line := range strings.Split(m.Msg, "\n") {
+			coloured := colourMsg(line)
+			irccon.Privmsg(m.Dest, coloured)
+		}
 	}
 }
 

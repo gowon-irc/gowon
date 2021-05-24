@@ -8,7 +8,9 @@ import paho.mqtt.client as mqtt
 
 
 def congratulations():
-    return "{green}congratulations!{clear}"
+    colours = ["green", "red", "magenta", "yellow", "cyan"]
+    lines = [f"{{{colour}}}congratulations!{{clear}}" for colour in colours]
+    return "\n".join(lines)
 
 
 def nosana():
