@@ -8,7 +8,7 @@ import paho.mqtt.client as mqtt
 
 
 def congratulations():
-    return "congratulations!"
+    return "{green}congratulations!{clear}"
 
 
 def nosana():

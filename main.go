@@ -34,7 +34,8 @@ func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
 			return
 		}
 
-		irccon.Privmsg(m.Dest, m.Msg)
+		coloured := colourMsg(m.Msg)
+		irccon.Privmsg(m.Dest, coloured)
 	}
 }
 
