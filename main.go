@@ -37,7 +37,9 @@ func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
 
 		for _, line := range strings.Split(m.Msg, "\n") {
 			coloured := colourMsg(line)
-			irccon.Privmsg(m.Dest, coloured)
+			for _, sm := range splitMsg(coloured, 400) {
+				irccon.Privmsg(m.Dest, sm)
+			}
 		}
 	}
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 )
 
@@ -37,27 +38,60 @@ func colourMsg(msg string) string {
 	return msg
 }
 
+func lastColour(msg string) (colour string) {
+	r, _ := regexp.Compile("\x03\\d{2}")
+	colours := r.FindAllString(msg, -1)
+
+	if len(colours) == 0 {
+		return ""
+	}
+
+	c := colours[len(colours)-1]
+
+	if c == "\x0399" {
+		return ""
+	}
+
+	return c
+}
+
+func terminateColour(msg string) string {
+	if lastColour(msg) != "" {
+		return msg + "\x0399"
+	}
+
+	return msg
+}
+
+func reverseWords(words []string) []string {
+	for i := 0; i < len(words)/2; i++ {
+		j := len(words) - i - 1
+		words[i], words[j] = words[j], words[i]
+	}
+
+	return words
+}
+
 func chunkMsg(msg string, length int) (chunk, remaining string) {
-	// if the msg is shorter than the chunk, no need to split
+	msg = terminateColour(msg)
 	if len(msg) <= length {
 		return msg, ""
 	}
 
-	// find the largest chunk smaller than the given length
-	checked := msg
-	li := strings.LastIndex(checked, " ")
+	for _, word := range reverseWords(strings.Fields(msg)) {
+		remaining = fmt.Sprintf(" %s%s", word, remaining)
+		chunk = strings.TrimSuffix(msg, remaining)
 
-	for li != -1 {
-		if li <= length {
-			return strings.TrimSpace(msg[0:li]), strings.TrimSpace(msg[li:])
+		c := terminateColour(chunk)
+		if len(c) <= length {
+			lc := lastColour(chunk)
+			remaining = fmt.Sprintf("%s%s", lc, strings.TrimSpace(remaining))
+			return c, remaining
 		}
-
-		checked = msg[0:li]
-		li = strings.LastIndex(checked, " ")
 	}
 
-	// if the desired condition could not be met, we need to split on the given length
-	return msg[0:length], msg[length:]
+	terminated := terminateColour(msg)
+	return terminated[0:length], terminated[length:]
 }
 
 func splitMsg(msg string, length int) (out []string) {
