@@ -75,7 +75,7 @@ func main() {
 
 	irccon.AddCallback("PRIVMSG", func(event *irc.Event) {
 		go func(event *irc.Event) {
-			mj, err := message.CreateMessageBody(event.Arguments[0], event.Arguments[1], event.Nick)
+			mj, err := message.CreateMessageBody("gowon", event.Arguments[0], event.Arguments[1], event.Nick)
 			if err != nil {
 				log.Print(err)
 

@@ -60,7 +60,7 @@ func main() {
 			return
 		}
 
-		mb, _ := message.CreateMessageBody(ms.Dest, out, ms.Nick)
+		mb, _ := message.CreateMessageBody("module1", ms.Dest, out, ms.Nick)
 		client.Publish("/gowon/output", 0, false, mb)
 	})
 

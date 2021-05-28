@@ -7,7 +7,7 @@ import (
 )
 
 func TestCreateMessageStructNoError(t *testing.T) {
-	body := []byte(`{"msg": "m", "nick": "n", "dest": "d"}`)
+	body := []byte(`{"module": "test", "msg": "m", "nick": "n", "dest": "d"}`)
 	_, err := CreateMessageStruct(body)
 
 	assert.Nil(t, err)
@@ -20,13 +20,18 @@ func TestCreateMessageStructErrors(t *testing.T) {
 		errMsg string
 	}{
 		{
+			name:   "No module",
+			body:   []byte(`{}`),
+			errMsg: ErrorMessageNoModuleMsg,
+		},
+		{
 			name:   "No content",
-			body:   []byte(`{"dest": "d"}`),
+			body:   []byte(`{"module": "test", "dest": "d"}`),
 			errMsg: ErrorMessageNoBodyMsg,
 		},
 		{
 			name:   "No destination",
-			body:   []byte(`{"msg": "m"}`),
+			body:   []byte(`{"module": "test", "msg": "m"}`),
 			errMsg: ErrorMessageNoDestinationMsg,
 		},
 	}

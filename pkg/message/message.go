@@ -8,9 +8,10 @@ import (
 )
 
 type Message struct {
-	Msg  string `json:"msg"`
-	Nick string `json:"nick,omitempty"`
-	Dest string `json:"dest"`
+	Module string `json:"module"`
+	Msg    string `json:"msg"`
+	Nick   string `json:"nick,omitempty"`
+	Dest   string `json:"dest"`
 }
 
 func (m *Message) GetCommand() string {
@@ -31,6 +32,8 @@ func (m *Message) GetArgs() string {
 
 const ErrorMessageParseMsg = "message couldn't be parsed as message json"
 
+const ErrorMessageNoModuleMsg = "message body does not contain a module source"
+
 const ErrorMessageNoBodyMsg = "message body does not contain any message content"
 
 const ErrorMessageNoDestinationMsg = "message body does not contain a destination"
@@ -39,6 +42,10 @@ func CreateMessageStruct(body []byte) (m Message, err error) {
 	err = json.Unmarshal(body, &m)
 	if err != nil {
 		return m, errors.Wrap(err, ErrorMessageParseMsg)
+	}
+
+	if m.Module == "" {
+		return m, errors.New(ErrorMessageNoModuleMsg)
 	}
 
 	if m.Msg == "" {
@@ -52,11 +59,12 @@ func CreateMessageStruct(body []byte) (m Message, err error) {
 	return m, nil
 }
 
-func CreateMessageBody(dest, msg, nick string) (body []byte, err error) {
+func CreateMessageBody(module, dest, msg, nick string) (body []byte, err error) {
 	m := &Message{
-		Dest: dest,
-		Msg:  msg,
-		Nick: nick,
+		Module: module,
+		Dest:   dest,
+		Msg:    msg,
+		Nick:   nick,
 	}
 
 	body, err = json.Marshal(m)

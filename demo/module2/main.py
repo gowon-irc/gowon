@@ -40,8 +40,8 @@ def on_message(client, userdata, msg):
     for r, f in matches:
         if r in msg_in.lower():
             out = f()
-            m2 = {"msg": out, "dest": dest}
-            client.publish("/gowon/output", json.dumps(m2))
+            msg_out = {"module": "module2", "msg": out, "dest": dest}
+            client.publish("/gowon/output", json.dumps(msg_out))
 
             return
 
