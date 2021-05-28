@@ -9,6 +9,8 @@ github.com/gowon-irc/gowon v0.0.0-20210524235038-b6cc9a9b9624 h1:ZGqkDJrCrItnmba
 github.com/gowon-irc/gowon v0.0.0-20210524235038-b6cc9a9b9624/go.mod h1:Qx8xz3LnjqnCxG6gTrKW6IWDdl4FTLvQVmBZEI5BAzk=
 github.com/gowon-irc/gowon v0.0.0-20210528212118-6b91e7a347bf h1:8E4jnWsCIteQmWVhtBNNGE16P7ohQxSRfnnn8PW00/E=
 github.com/gowon-irc/gowon v0.0.0-20210528212118-6b91e7a347bf/go.mod h1:Qx8xz3LnjqnCxG6gTrKW6IWDdl4FTLvQVmBZEI5BAzk=
+github.com/gowon-irc/gowon v0.0.0-20210528222019-0ae5d995775d h1:E6FFTNtu0DaDlbdzLff1qqoNgR6nFDuQQgsUPX/Zro0=
+github.com/gowon-irc/gowon v0.0.0-20210528222019-0ae5d995775d/go.mod h1:Qx8xz3LnjqnCxG6gTrKW6IWDdl4FTLvQVmBZEI5BAzk=
 github.com/jessevdk/go-flags v1.5.0 h1:1jKYvbxEjfUl0fmqTCOfonvskHHXMjBySTLW4y9LFvc=
 github.com/jessevdk/go-flags v1.5.0/go.mod h1:Fw0T6WPc1dYxT4mKEZRfG5kJhaTDP9pj1c2EWnYs/m4=
 github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
