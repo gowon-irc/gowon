@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -22,7 +23,7 @@ type Options struct {
 const mqttConnectRetryInternal = 5 * time.Second
 
 func capHandler(m message.Message) string {
-	return strings.ToUpper(m.GetArgs())
+	return strings.ToUpper(m.Args)
 }
 
 func main() {
@@ -53,14 +54,21 @@ func main() {
 
 		var out string
 
-		switch ms.GetCommand() {
+		switch ms.Command {
 		case "cap":
 			out = capHandler(ms)
 		default:
 			return
 		}
 
-		mb, _ := message.CreateMessageBody("module1", ms.Dest, out, ms.Nick)
+		ms.Module = "gowon"
+		ms.Msg = out
+		mb, err := json.Marshal(ms)
+		if err != nil {
+			log.Print(err)
+
+			return
+		}
 		client.Publish("/gowon/output", 0, false, mb)
 	})
 
