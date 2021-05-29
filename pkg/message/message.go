@@ -8,26 +8,12 @@ import (
 )
 
 type Message struct {
-	Module string `json:"module"`
-	Msg    string `json:"msg"`
-	Nick   string `json:"nick,omitempty"`
-	Dest   string `json:"dest"`
-}
-
-func (m *Message) GetCommand() string {
-	if strings.HasPrefix(m.Msg, ".") {
-		return strings.TrimPrefix(strings.Fields(m.Msg)[0], ".")
-	}
-
-	return ""
-}
-
-func (m *Message) GetArgs() string {
-	if !strings.HasPrefix(m.Msg, ".") {
-		return m.Msg
-	}
-
-	return strings.TrimSpace(strings.TrimPrefix(m.Msg, strings.Fields(m.Msg)[0]))
+	Module  string `json:"module"`
+	Msg     string `json:"msg"`
+	Nick    string `json:"nick,omitempty"`
+	Dest    string `json:"dest"`
+	Command string `json:"command"`
+	Args    string `json:"args"`
 }
 
 const ErrorMessageParseMsg = "message couldn't be parsed as message json"
@@ -37,6 +23,22 @@ const ErrorMessageNoModuleMsg = "message body does not contain a module source"
 const ErrorMessageNoBodyMsg = "message body does not contain any message content"
 
 const ErrorMessageNoDestinationMsg = "message body does not contain a destination"
+
+func getCommand(msg string) string {
+	if strings.HasPrefix(msg, ".") {
+		return strings.TrimPrefix(strings.Fields(msg)[0], ".")
+	}
+
+	return ""
+}
+
+func getArgs(msg string) string {
+	if !strings.HasPrefix(msg, ".") {
+		return msg
+	}
+
+	return strings.TrimSpace(strings.TrimPrefix(msg, strings.Fields(msg)[0]))
+}
 
 func CreateMessageStruct(body []byte) (m Message, err error) {
 	err = json.Unmarshal(body, &m)
@@ -56,21 +58,13 @@ func CreateMessageStruct(body []byte) (m Message, err error) {
 		return m, errors.New(ErrorMessageNoDestinationMsg)
 	}
 
+	if m.Command == "" {
+		m.Command = getCommand(m.Msg)
+	}
+
+	if m.Args == "" {
+		m.Args = getArgs(m.Msg)
+	}
+
 	return m, nil
-}
-
-func CreateMessageBody(module, dest, msg, nick string) (body []byte, err error) {
-	m := &Message{
-		Module: module,
-		Dest:   dest,
-		Msg:    msg,
-		Nick:   nick,
-	}
-
-	body, err = json.Marshal(m)
-	if err != nil {
-		return body, errors.Unwrap(err)
-	}
-
-	return body, nil
 }

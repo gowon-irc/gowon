@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -25,6 +26,27 @@ type Options struct {
 }
 
 const mqttConnectRetryInternal = 5 * time.Second
+
+func createIRCHandler(c mqtt.Client) func(event *irc.Event) {
+	return func(event *irc.Event) {
+		go func(event *irc.Event) {
+			m := &message.Message{
+				Module: "gowon",
+				Dest:   event.Arguments[0],
+				Msg:    event.Arguments[1],
+				Nick:   event.Nick,
+			}
+			mj, err := json.Marshal(m)
+			if err != nil {
+				log.Print(err)
+
+				return
+			}
+
+			c.Publish("/gowon/input", 0, false, mj)
+		}(event)
+	}
+}
 
 func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
@@ -73,18 +95,8 @@ func main() {
 		}
 	})
 
-	irccon.AddCallback("PRIVMSG", func(event *irc.Event) {
-		go func(event *irc.Event) {
-			mj, err := message.CreateMessageBody("gowon", event.Arguments[0], event.Arguments[1], event.Nick)
-			if err != nil {
-				log.Print(err)
-
-				return
-			}
-
-			c.Publish("/gowon/input", 0, false, mj)
-		}(event)
-	})
+	ircHandler := createIRCHandler(c)
+	irccon.AddCallback("PRIVMSG", ircHandler)
 
 	msgHandler := createMessageHandler(irccon)
 	c.Subscribe("/gowon/output", 0, msgHandler)

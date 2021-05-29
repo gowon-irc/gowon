@@ -1,6 +1,7 @@
 package message
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -44,51 +45,51 @@ func TestCreateMessageStructErrors(t *testing.T) {
 	}
 }
 
-var testCommandTestCases = []struct {
-	name    string
-	message Message
-	command string
-	args    string
-}{
-	{
-		name: "Command with args",
-		message: Message{
-			Msg: ".command command args",
-		},
-		command: "command",
-		args:    "command args",
-	},
-	{
-		name: "No command",
-		message: Message{
-			Msg: "command args",
-		},
-		command: "",
-		args:    "command args",
-	},
-	{
-		name: "Args without command",
-		message: Message{
-			Msg: "args without command",
-		},
-		command: "",
-		args:    "args without command",
-	},
-}
+func TestMessageCommandArgs(t *testing.T) {
+	bodyTmpl := `{"module": "m", "msg": "%s", "dest": "d"}`
 
-func TestMessageGetCommand(t *testing.T) {
-
-	for _, tc := range testCommandTestCases {
-		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.command, tc.message.GetCommand())
-		})
+	cases := []struct {
+		name    string
+		body    string
+		command string
+		args    string
+	}{
+		{
+			name:    "Command with args",
+			body:    fmt.Sprintf(bodyTmpl, ".command args"),
+			command: "command",
+			args:    "args",
+		},
+		{
+			name:    "No command",
+			body:    fmt.Sprintf(bodyTmpl, "command args"),
+			command: "",
+			args:    "command args",
+		},
+		{
+			name:    "Args without command",
+			body:    fmt.Sprintf(bodyTmpl, "args without command"),
+			command: "",
+			args:    "args without command",
+		},
+		{
+			name:    "Existing command and args",
+			body:    `{"module": "m", "msg": "output", "dest": "d", "command": "c", "args": "a"}`,
+			command: "c",
+			args:    "a",
+		},
 	}
-}
 
-func TestMessageGetArgs(t *testing.T) {
-	for _, tc := range testCommandTestCases {
+	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
-			assert.Equal(t, tc.args, tc.message.GetArgs())
+			m, err := CreateMessageStruct([]byte(tc.body))
+
+			assert.Nil(t, err)
+
+			got := []string{m.Command, m.Args}
+			expected := []string{tc.command, tc.args}
+
+			assert.Equal(t, got, expected)
 		})
 	}
 }
