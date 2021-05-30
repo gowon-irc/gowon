@@ -6,7 +6,6 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"strings"
 	"syscall"
 	"time"
 
@@ -23,7 +22,7 @@ type Options struct {
 const mqttConnectRetryInternal = 5 * time.Second
 
 func capHandler(m message.Message) string {
-	return strings.ToUpper(m.Args)
+	return fmt.Sprintf("{green}%s{clear}", m.Msg)
 }
 
 func main() {
@@ -35,7 +34,7 @@ func main() {
 	}
 
 	mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("tcp://%s", opts.Broker))
-	mqttOpts.SetClientID("gowon_module1")
+	mqttOpts.SetClientID("gowon_module3")
 	mqttOpts.SetConnectRetry(true)
 	mqttOpts.SetConnectRetryInterval(mqttConnectRetryInternal)
 
@@ -44,11 +43,15 @@ func main() {
 		panic(token.Error())
 	}
 
-	c.Subscribe("/gowon/input", 0, func(client mqtt.Client, msg mqtt.Message) {
+	c.Subscribe("/gowon/output", 0, func(client mqtt.Client, msg mqtt.Message) {
 		ms, err := message.CreateMessageStruct(msg.Payload())
 		if err != nil {
 			log.Print(err)
 
+			return
+		}
+
+		if ms.Module == "module3" {
 			return
 		}
 
@@ -61,7 +64,7 @@ func main() {
 			return
 		}
 
-		ms.Module = "module1"
+		ms.Module = "module3"
 		ms.Msg = out
 		mb, err := json.Marshal(ms)
 		if err != nil {

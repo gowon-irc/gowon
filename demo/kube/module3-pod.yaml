@@ -1,0 +1,12 @@
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: module3
+spec:
+  containers:
+    - name: module3
+      image: module3
+      env:
+        - name: GOWON_BROKER
+          value: mosquitto:1883

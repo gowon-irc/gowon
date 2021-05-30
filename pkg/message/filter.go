@@ -16,7 +16,7 @@ const ErrorFilterInvalidFields = "Filter does not contain two fields, equals sho
 const ErrorFilterInvalidKey = "Filter key is invalid, must be one of module, msg, nick, dest, command, args"
 
 func checkFilterSingle(filter string) error {
-	m, err := regexp.MatchString(`^[!=a-zA-Z]+$`, filter)
+	m, err := regexp.MatchString(`^[!=a-zA-Z0-9]+$`, filter)
 	if err != nil {
 		return err
 	}
@@ -78,10 +78,15 @@ func filterSingle(m *Message, filter string) (bool, error) {
 		return false, err
 	}
 
-	out := true
+	out := false
 
 	messageFields := map[string]string{
-		"module": m.Module,
+		"module":  m.Module,
+		"msg":     m.Msg,
+		"nick":    m.Nick,
+		"dest":    m.Dest,
+		"command": m.Command,
+		"args":    m.Args,
 	}
 
 	invertFilter := strings.HasPrefix(filter, "!")

@@ -20,3 +20,5 @@ spec:
           value: gowon
         - name: GOWON_CHANNELS
           value: "#gowon,#gowon2"
+        - name: GOWON_FILTERS
+          value: "!module=module3+command=cap"

@@ -123,6 +123,22 @@ var filters = []struct {
 		filter: "command=test",
 		result: true,
 	},
+	{
+		name: "False condition",
+		message: Message{
+			Module: "mod",
+		},
+		filter: "module=othermod",
+		result: false,
+	},
+	{
+		name: "False condition with inversion",
+		message: Message{
+			Module: "mod",
+		},
+		filter: "!module=mod",
+		result: false,
+	},
 }
 
 func TestCheckFilterSingleValid(t *testing.T) {
@@ -139,7 +155,7 @@ func TestFilterMessageSingle(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			got, _ := filterSingle(&tc.message, tc.filter)
 
-			assert.Equal(t, got, tc.result)
+			assert.Equal(t, tc.result, got)
 		})
 	}
 }
@@ -209,6 +225,32 @@ func TestFilter(t *testing.T) {
 			filter: "module=mod+command=test",
 			result: true,
 		},
+		{
+			name: "One false",
+			message: Message{
+				Module: "mod",
+			},
+			filter: "module=othermod",
+			result: false,
+		},
+		{
+			name: "One false, one true",
+			message: Message{
+				Module:  "mod",
+				Command: "test",
+			},
+			filter: "module=othermod+command=test",
+			result: false,
+		},
+		{
+			name: "One inverted, one normal",
+			message: Message{
+				Module:  "mod",
+				Command: "test",
+			},
+			filter: "!module=othermod+command=test",
+			result: true,
+		},
 	}
 
 	for _, tc := range cases {
@@ -216,7 +258,7 @@ func TestFilter(t *testing.T) {
 			got, err := Filter(&tc.message, tc.filter)
 
 			assert.Nil(t, err)
-			assert.Equal(t, got, tc.result)
+			assert.Equal(t, tc.result, got)
 		})
 	}
 }

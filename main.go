@@ -23,6 +23,7 @@ type Options struct {
 	Debug    bool     `short:"d" long:"debug" env:"GOWON_DEBUG" description:"Debug logging"`
 	Prefix   string   `short:"P" long:"prefix" env:"GOWON_PREFIX" default:"." description:"prefix for commands"`
 	Broker   string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
+	Filters  []string `short:"f" long:"filters" env:"GOWON_FILTERS" env-delim:"," description:"filters to apply"`
 }
 
 const mqttConnectRetryInternal = 5 * time.Second
@@ -48,13 +49,26 @@ func createIRCHandler(c mqtt.Client) func(event *irc.Event) {
 	}
 }
 
-func createMessageHandler(irccon *irc.Connection) mqtt.MessageHandler {
+func createMessageHandler(irccon *irc.Connection, filters []string) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
 		m, err := message.CreateMessageStruct(msg.Payload())
 		if err != nil {
 			log.Print(err)
 
 			return
+		}
+
+		for _, f := range filters {
+			filtered, err := message.Filter(&m, f)
+
+			if err != nil {
+				break
+			}
+
+			if filtered {
+				log.Printf(`Message "%s" has been filtered by filter "%s"`, m.Msg, f)
+				return
+			}
 		}
 
 		for _, line := range strings.Split(m.Msg, "\n") {
@@ -72,6 +86,13 @@ func main() {
 	_, err := flags.Parse(&opts)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	for _, f := range opts.Filters {
+		err := message.CheckFilter(f)
+		if err != nil {
+			log.Fatal(err)
+		}
 	}
 
 	mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("tcp://%s", opts.Broker))
@@ -98,7 +119,7 @@ func main() {
 	ircHandler := createIRCHandler(c)
 	irccon.AddCallback("PRIVMSG", ircHandler)
 
-	msgHandler := createMessageHandler(irccon)
+	msgHandler := createMessageHandler(irccon, opts.Filters)
 	c.Subscribe("/gowon/output", 0, msgHandler)
 
 	err = irccon.Connect(opts.Server)
