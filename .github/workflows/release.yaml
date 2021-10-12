@@ -23,6 +23,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v2
+
       - name: hadolint
         uses: reviewdog/action-hadolint@v1.25.0
         with:
@@ -139,6 +140,6 @@ jobs:
           push: ${{ steps.prep.outputs.push }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/gowon:latest
-            ghcr.io/${{ github.repository_owner }}/gowon:v${{ steps.gitversion.outputs.fullSemVer }}
+            ghcr.io/${{ github.repository_owner }}/gowon:${ GITVERSION_FULLSEMVER/+/-}
           cache-from: ${{ steps.prep.outputs.cache_from }}
           cache-to: ${{ steps.prep.outputs.cache_to }}
