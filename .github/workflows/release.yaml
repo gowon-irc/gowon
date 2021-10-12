@@ -73,6 +73,8 @@ jobs:
             echo ::set-output name=cache_to::"type=local,dest=/tmp/.buildx-cache,mode=max"
           fi
 
+          echo ::set-output name=gitversionf::${GITVERSION_FULLSEMVER/+/-}
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
         with:
@@ -140,6 +142,6 @@ jobs:
           push: ${{ steps.prep.outputs.push }}
           tags: |
             ghcr.io/${{ github.repository_owner }}/gowon:latest
-            ghcr.io/${{ github.repository_owner }}/gowon:${ GITVERSION_FULLSEMVER/+/-}
+            ghcr.io/${{ github.repository_owner }}/gowon:${{ steps.prep.outputs.gitversionf }}
           cache-from: ${{ steps.prep.outputs.cache_from }}
           cache-to: ${{ steps.prep.outputs.cache_to }}
