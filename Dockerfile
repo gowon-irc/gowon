@@ -1,8 +1,9 @@
 FROM golang:alpine as build-env
-ADD . /src
-RUN cd /src && go build -o gowon
+COPY . /src
+WORKDIR /src
+RUN go build -o gowon
 
-FROM alpine
+FROM alpine:3.14.2
 WORKDIR /app
 COPY --from=build-env /src/gowon /app/
-ENTRYPOINT ./gowon
+ENTRYPOINT ["./gowon"]
