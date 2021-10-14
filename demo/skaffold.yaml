@@ -8,17 +8,17 @@ build:
       docker:
         dockerfile: Dockerfile
     - image: module1
-      context: ./..
+      context: module1
       docker:
-        dockerfile: demo/module1/Dockerfile
+        dockerfile: Dockerfile
     - image: module2
       context: module2
       docker:
         dockerfile: Dockerfile
     - image: module3
-      context: ./..
+      context: module3
       docker:
-        dockerfile: demo/module3/Dockerfile
+        dockerfile: Dockerfile
     - image: tiny
       context: .
       docker:

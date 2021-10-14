@@ -1,8 +1,9 @@
 FROM golang:alpine as build-env
-ADD . /src
-RUN cd /src/demo/module3 && go build -o module3
+COPY . /src
+WORKDIR /src
+RUN go build -o module3
 
-FROM alpine
+FROM alpine:3.14.2
 WORKDIR /app
-COPY --from=build-env /src/demo/module3/module3 /app/
-ENTRYPOINT ./module3
+COPY --from=build-env /src/module3 /app/
+ENTRYPOINT ["./module3"]

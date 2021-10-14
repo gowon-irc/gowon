@@ -11,7 +11,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gowon-irc/gowon/pkg/message"
+	"github.com/gowon-irc/go-gowon"
 	"github.com/jessevdk/go-flags"
 )
 
@@ -22,7 +22,7 @@ type Options struct {
 
 const mqttConnectRetryInternal = 5 * time.Second
 
-func capHandler(m message.Message) string {
+func capHandler(m gowon.Message) string {
 	return strings.ToUpper(m.Args)
 }
 
@@ -45,7 +45,7 @@ func main() {
 	}
 
 	c.Subscribe("/gowon/input", 0, func(client mqtt.Client, msg mqtt.Message) {
-		ms, err := message.CreateMessageStruct(msg.Payload())
+		ms, err := gowon.CreateMessageStruct(msg.Payload())
 		if err != nil {
 			log.Print(err)
 

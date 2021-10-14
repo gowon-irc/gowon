@@ -8,7 +8,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
-	"github.com/gowon-irc/gowon/pkg/message"
+	"github.com/gowon-irc/go-gowon"
 	"github.com/jessevdk/go-flags"
 	irc "github.com/thoj/go-ircevent"
 )
@@ -31,7 +31,7 @@ const mqttConnectRetryInternal = 5 * time.Second
 func createIRCHandler(c mqtt.Client) func(event *irc.Event) {
 	return func(event *irc.Event) {
 		go func(event *irc.Event) {
-			m := &message.Message{
+			m := &gowon.Message{
 				Module: "gowon",
 				Dest:   event.Arguments[0],
 				Msg:    event.Arguments[1],
@@ -51,7 +51,7 @@ func createIRCHandler(c mqtt.Client) func(event *irc.Event) {
 
 func createMessageHandler(irccon *irc.Connection, filters []string) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
-		m, err := message.CreateMessageStruct(msg.Payload())
+		m, err := gowon.CreateMessageStruct(msg.Payload())
 		if err != nil {
 			log.Print(err)
 
@@ -59,7 +59,7 @@ func createMessageHandler(irccon *irc.Connection, filters []string) mqtt.Message
 		}
 
 		for _, f := range filters {
-			filtered, err := message.Filter(&m, f)
+			filtered, err := gowon.Filter(&m, f)
 
 			if err != nil {
 				break
@@ -89,7 +89,7 @@ func main() {
 	}
 
 	for _, f := range opts.Filters {
-		err := message.CheckFilter(f)
+		err := gowon.CheckFilter(f)
 		if err != nil {
 			log.Fatal(err)
 		}
