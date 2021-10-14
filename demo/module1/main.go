@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -22,8 +21,8 @@ type Options struct {
 
 const mqttConnectRetryInternal = 5 * time.Second
 
-func capHandler(m gowon.Message) string {
-	return strings.ToUpper(m.Args)
+func capHandler(m gowon.Message) (string, error) {
+	return strings.ToUpper(m.Args), nil
 }
 
 func main() {
@@ -44,33 +43,9 @@ func main() {
 		panic(token.Error())
 	}
 
-	c.Subscribe("/gowon/input", 0, func(client mqtt.Client, msg mqtt.Message) {
-		ms, err := gowon.CreateMessageStruct(msg.Payload())
-		if err != nil {
-			log.Print(err)
-
-			return
-		}
-
-		var out string
-
-		switch ms.Command {
-		case "cap":
-			out = capHandler(ms)
-		default:
-			return
-		}
-
-		ms.Module = "module1"
-		ms.Msg = out
-		mb, err := json.Marshal(ms)
-		if err != nil {
-			log.Print(err)
-
-			return
-		}
-		client.Publish("/gowon/output", 0, false, mb)
-	})
+	mr := gowon.NewMessageRouter()
+	mr.AddCommand("cap", capHandler)
+	mr.Subscribe(c, "module1")
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
