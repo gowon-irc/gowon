@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -21,8 +20,13 @@ type Options struct {
 
 const mqttConnectRetryInternal = 5 * time.Second
 
-func capHandler(m gowon.Message) string {
-	return fmt.Sprintf("{green}%s{clear}", m.Msg)
+func capHandler(m gowon.Message) (string, error) {
+	filtered, _ := gowon.Filter(&m, "module=module3")
+	if filtered {
+		return "", nil
+	}
+
+	return fmt.Sprintf("{green}%s{clear}", m.Msg), nil
 }
 
 func main() {
@@ -43,37 +47,9 @@ func main() {
 		panic(token.Error())
 	}
 
-	c.Subscribe("/gowon/output", 0, func(client mqtt.Client, msg mqtt.Message) {
-		ms, err := gowon.CreateMessageStruct(msg.Payload())
-		if err != nil {
-			log.Print(err)
-
-			return
-		}
-
-		if ms.Module == "module3" {
-			return
-		}
-
-		var out string
-
-		switch ms.Command {
-		case "cap":
-			out = capHandler(ms)
-		default:
-			return
-		}
-
-		ms.Module = "module3"
-		ms.Msg = out
-		mb, err := json.Marshal(ms)
-		if err != nil {
-			log.Print(err)
-
-			return
-		}
-		client.Publish("/gowon/output", 0, false, mb)
-	})
+	mr := gowon.NewMessageRouter()
+	mr.AddCommand("cap", capHandler)
+	mr.SubscribeMiddleware(c, "module3")
 
 	sigs := make(chan os.Signal, 1)
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
