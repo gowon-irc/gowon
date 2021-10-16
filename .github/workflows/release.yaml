@@ -8,12 +8,10 @@ on:
       - master
     paths:
       - '*.go'
-      - '**/*.go'
       - 'Dockerfile'
   pull_request:
     paths:
       - '*.go'
-      - '**/*.go'
       - 'Dockerfile'
 
 jobs:
