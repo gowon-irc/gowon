@@ -19,10 +19,6 @@ build:
       context: module3
       docker:
         dockerfile: Dockerfile
-    - image: tiny
-      context: .
-      docker:
-        dockerfile: tiny.Dockerfile
 deploy:
   kubectl:
     manifests:
