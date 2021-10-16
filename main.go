@@ -1,10 +1,8 @@
 package main
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
-	"strings"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -26,61 +24,14 @@ type Options struct {
 	Filters  []string `short:"f" long:"filters" env:"GOWON_FILTERS" env-delim:"," description:"filters to apply"`
 }
 
-const mqttConnectRetryInternal = 5 * time.Second
-
-func createIRCHandler(c mqtt.Client) func(event *irc.Event) {
-	return func(event *irc.Event) {
-		go func(event *irc.Event) {
-			m := &gowon.Message{
-				Module: "gowon",
-				Dest:   event.Arguments[0],
-				Msg:    event.Arguments[1],
-				Nick:   event.Nick,
-			}
-			mj, err := json.Marshal(m)
-			if err != nil {
-				log.Print(err)
-
-				return
-			}
-
-			c.Publish("/gowon/input", 0, false, mj)
-		}(event)
-	}
-}
-
-func createMessageHandler(irccon *irc.Connection, filters []string) mqtt.MessageHandler {
-	return func(client mqtt.Client, msg mqtt.Message) {
-		m, err := gowon.CreateMessageStruct(msg.Payload())
-		if err != nil {
-			log.Print(err)
-
-			return
-		}
-
-		for _, f := range filters {
-			filtered, err := gowon.Filter(&m, f)
-
-			if err != nil {
-				break
-			}
-
-			if filtered {
-				log.Printf(`Message "%s" has been filtered by filter "%s"`, m.Msg, f)
-				return
-			}
-		}
-
-		for _, line := range strings.Split(m.Msg, "\n") {
-			coloured := colourMsg(line)
-			for _, sm := range splitMsg(coloured, 400) {
-				irccon.Privmsg(m.Dest, sm)
-			}
-		}
-	}
-}
+const (
+	mqttConnectRetryInternal = 5
+	mqttDisconnectTimeout    = 1000
+)
 
 func main() {
+	log.Println("starting gowon")
+
 	opts := Options{}
 
 	_, err := flags.Parse(&opts)
@@ -95,15 +46,16 @@ func main() {
 		}
 	}
 
-	mqttOpts := mqtt.NewClientOptions().AddBroker(fmt.Sprintf("tcp://%s", opts.Broker))
+	mqttOpts := mqtt.NewClientOptions()
+	mqttOpts.AddBroker(fmt.Sprintf("tcp://%s", opts.Broker))
 	mqttOpts.SetClientID("gowon")
 	mqttOpts.SetConnectRetry(true)
-	mqttOpts.SetConnectRetryInterval(mqttConnectRetryInternal)
+	mqttOpts.SetConnectRetryInterval(mqttConnectRetryInternal * time.Second)
+	mqttOpts.SetAutoReconnect(true)
 
-	c := mqtt.NewClient(mqttOpts)
-	if token := c.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
-	}
+	mqttOpts.DefaultPublishHandler = defaultPublishHandler
+	mqttOpts.OnConnectionLost = onConnectionLostHandler
+	mqttOpts.OnReconnecting = onRecconnectingHandler
 
 	irccon := irc.IRC(opts.Nick, opts.User)
 	irccon.VerboseCallbackHandler = opts.Verbose
@@ -116,16 +68,24 @@ func main() {
 		}
 	})
 
+	mqttOpts.OnConnect = createOnConnectHandler(irccon, opts.Filters)
+	c := mqtt.NewClient(mqttOpts)
+
 	ircHandler := createIRCHandler(c)
 	irccon.AddCallback("PRIVMSG", ircHandler)
-
-	msgHandler := createMessageHandler(irccon, opts.Filters)
-	c.Subscribe("/gowon/output", 0, msgHandler)
 
 	err = irccon.Connect(opts.Server)
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	if token := c.Connect(); token.Wait() && token.Error() != nil {
+		panic(token.Error())
+	}
+
 	irccon.Loop()
+
+	log.Println("exiting")
+	c.Disconnect(mqttDisconnectTimeout)
+	log.Println("shutdown complete")
 }
