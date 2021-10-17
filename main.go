@@ -6,6 +6,7 @@ import (
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/flowchartsman/retry"
 	"github.com/gowon-irc/go-gowon"
 	"github.com/jessevdk/go-flags"
 	irc "github.com/thoj/go-ircevent"
@@ -74,7 +75,10 @@ func main() {
 	ircHandler := createIRCHandler(c)
 	irccon.AddCallback("PRIVMSG", ircHandler)
 
-	err = irccon.Connect(opts.Server)
+	retrier := retry.NewRetrier(5, 100*time.Millisecond, 5*time.Second)
+	err = retrier.Run(func() error {
+		return irccon.Connect(opts.Server)
+	})
 	if err != nil {
 		log.Fatal(err)
 	}
