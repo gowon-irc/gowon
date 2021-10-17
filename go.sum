@@ -7,6 +7,8 @@ github.com/gorilla/websocket v1.4.2 h1:+/TMaTYc4QFitKJxsQ7Yye35DkWvkdLcvGKqM+x0U
 github.com/gorilla/websocket v1.4.2/go.mod h1:YR8l580nyteQvAITg2hZ9XVh4b55+EU/adAjf1fMHhE=
 github.com/gowon-irc/go-gowon v0.0.0-20211014234517-73d86da36ca9 h1:XTjjzLRaxsc8J7fubE/cJuu5cS3N2D4vq4DzYZ2iaVo=
 github.com/gowon-irc/go-gowon v0.0.0-20211014234517-73d86da36ca9/go.mod h1:iY2WKgdQI1tsyd+lYFioxAnb5+8FQlJ9vqCTAUoq8QQ=
+github.com/gowon-irc/go-gowon v0.0.0-20211016234342-d666c7430ea9 h1:Boyyo7CC+14AMNXEKJlrGzkdMwZzFz6fjOcgxtuXXho=
+github.com/gowon-irc/go-gowon v0.0.0-20211016234342-d666c7430ea9/go.mod h1:iY2WKgdQI1tsyd+lYFioxAnb5+8FQlJ9vqCTAUoq8QQ=
 github.com/gowon-irc/gowon v0.0.0-20211012014610-ece6c2510654/go.mod h1:Qx8xz3LnjqnCxG6gTrKW6IWDdl4FTLvQVmBZEI5BAzk=
 github.com/jessevdk/go-flags v1.5.0 h1:1jKYvbxEjfUl0fmqTCOfonvskHHXMjBySTLW4y9LFvc=
 github.com/jessevdk/go-flags v1.5.0/go.mod h1:Fw0T6WPc1dYxT4mKEZRfG5kJhaTDP9pj1c2EWnYs/m4=
