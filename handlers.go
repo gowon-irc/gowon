@@ -14,10 +14,12 @@ func createIRCHandler(c mqtt.Client) func(event *irc.Event) {
 	return func(event *irc.Event) {
 		go func(event *irc.Event) {
 			m := &gowon.Message{
-				Module: "gowon",
-				Dest:   event.Arguments[0],
-				Msg:    event.Arguments[1],
-				Nick:   event.Nick,
+				Module:  "gowon",
+				Msg:     event.Arguments[1],
+				Nick:    event.Nick,
+				Dest:    event.Arguments[0],
+				Command: gowon.GetCommand(event.Arguments[1]),
+				Args:    gowon.GetArgs(event.Arguments[1]),
 			}
 			mj, err := json.Marshal(m)
 			if err != nil {
