@@ -8,11 +8,15 @@ on:
       - master
     paths:
       - '*.go'
-      - 'Dockerfile'
+      - Dockerfile
+      - go.mod
+      - go.sum
   pull_request:
     paths:
       - '*.go'
-      - 'Dockerfile'
+      - Dockerfile
+      - go.mod
+      - go.sum
 
 jobs:
   hadolint:
@@ -30,11 +34,27 @@ jobs:
           filter_mode: diff_context
           fail_on_error: true
 
+  gotest:
+    name: Go test
+    runs-on: ubuntu-20.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.17
+
+      - name: Test
+        run: go test -v ./...
+
   build:
     name: Build
     runs-on: ubuntu-20.04
     needs:
       - hadolint
+      - gotest
     if: "!contains(github.event.head_commit.message, '[ci-skip]')"
 
     steps:
