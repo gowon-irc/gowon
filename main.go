@@ -14,8 +14,9 @@ import (
 
 type Options struct {
 	Server   string   `short:"s" long:"server" env:"GOWON_SERVER" required:"true" description:"IRC server:port"`
-	Nick     string   `short:"n" long:"nick" env:"GOWON_NICK" required:"true" description:"Bot nick"`
 	User     string   `short:"u" long:"user" env:"GOWON_USER" required:"true" description:"Bot user"`
+	Nick     string   `short:"n" long:"nick" env:"GOWON_NICK" required:"true" description:"Bot nick"`
+	Password string   `short:"p" long:"password" env:"GOWON_PASSWORD" description:"Bot password"`
 	Channels []string `short:"c" long:"channels" env:"GOWON_CHANNELS" env-delim:"," required:"true" description:"Channels to join"`
 	UseTLS   bool     `short:"T" long:"tls" env:"GOWON_TLS" description:"Connect to irc server using tls"`
 	Verbose  bool     `short:"v" long:"verbose" env:"GOWON_VERBOSE" description:"Verbose logging"`
@@ -62,6 +63,10 @@ func main() {
 	irccon.VerboseCallbackHandler = opts.Verbose
 	irccon.Debug = opts.Debug
 	irccon.UseTLS = opts.UseTLS
+
+	if opts.Password != "" {
+		irccon.Password = opts.Password
+	}
 
 	irccon.AddCallback("001", func(e *irc.Event) {
 		for _, channel := range opts.Channels {
