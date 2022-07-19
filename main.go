@@ -82,6 +82,8 @@ func main() {
 		for _, channel := range opts.Channels {
 			irccon.Join(channel)
 		}
+
+		irccon.SendRaw("CAP REQ :server-time")
 	})
 
 	mqttOpts.OnConnect = createOnConnectHandler(irccon, opts.Filters)
