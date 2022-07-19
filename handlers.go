@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"strings"
 
@@ -98,17 +99,20 @@ func onRecconnectingHandler(c mqtt.Client, opts *mqtt.ClientOptions) {
 	log.Println("attempting to reconnect to broker")
 }
 
-func createOnConnectHandler(irccon *irc.Connection, filters []string) func(mqtt.Client) {
+func createOnConnectHandler(irccon *irc.Connection, filters []string, topicRoot string) func(mqtt.Client) {
 	log.Println("connected to broker")
+
+	topic := topicRoot + "/output"
+	rawTopic := topicRoot + "/raw/output"
 
 	mh := createMessageHandler(irccon, filters)
 	rh := createSendRawHandler(irccon)
 
 	return func(client mqtt.Client) {
-		client.Subscribe("/gowon/output", 0, mh)
-		log.Printf("Subscription to /gowon/output complete")
+		client.Subscribe(topic, 0, mh)
+		log.Printf(fmt.Sprintf("Subscription to %s complete", topic))
 
-		client.Subscribe("/gowon/raw/output", 0, rh)
-		log.Printf("Subscription to /gowon/raw/output complete")
+		client.Subscribe(rawTopic, 0, rh)
+		log.Printf(fmt.Sprintf("Subscription to %s complete", rawTopic))
 	}
 }

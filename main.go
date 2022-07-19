@@ -16,17 +16,18 @@ import (
 )
 
 type Options struct {
-	Server   string   `short:"s" long:"server" env:"GOWON_SERVER" required:"true" description:"IRC server:port"`
-	User     string   `short:"u" long:"user" env:"GOWON_USER" required:"true" description:"Bot user"`
-	Nick     string   `short:"n" long:"nick" env:"GOWON_NICK" required:"true" description:"Bot nick"`
-	Password string   `short:"p" long:"password" env:"GOWON_PASSWORD" description:"Bot password"`
-	Channels []string `short:"c" long:"channels" env:"GOWON_CHANNELS" env-delim:"," required:"true" description:"Channels to join"`
-	UseTLS   bool     `short:"T" long:"tls" env:"GOWON_TLS" description:"Connect to irc server using tls"`
-	Verbose  bool     `short:"v" long:"verbose" env:"GOWON_VERBOSE" description:"Verbose logging"`
-	Debug    bool     `short:"d" long:"debug" env:"GOWON_DEBUG" description:"Debug logging"`
-	Prefix   string   `short:"P" long:"prefix" env:"GOWON_PREFIX" default:"." description:"prefix for commands"`
-	Broker   string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
-	Filters  []string `short:"f" long:"filters" env:"GOWON_FILTERS" env-delim:"," description:"filters to apply"`
+	Server    string   `short:"s" long:"server" env:"GOWON_SERVER" required:"true" description:"IRC server:port"`
+	User      string   `short:"u" long:"user" env:"GOWON_USER" required:"true" description:"Bot user"`
+	Nick      string   `short:"n" long:"nick" env:"GOWON_NICK" required:"true" description:"Bot nick"`
+	Password  string   `short:"p" long:"password" env:"GOWON_PASSWORD" description:"Bot password"`
+	Channels  []string `short:"c" long:"channels" env:"GOWON_CHANNELS" env-delim:"," required:"true" description:"Channels to join"`
+	UseTLS    bool     `short:"T" long:"tls" env:"GOWON_TLS" description:"Connect to irc server using tls"`
+	Verbose   bool     `short:"v" long:"verbose" env:"GOWON_VERBOSE" description:"Verbose logging"`
+	Debug     bool     `short:"d" long:"debug" env:"GOWON_DEBUG" description:"Debug logging"`
+	Prefix    string   `short:"P" long:"prefix" env:"GOWON_PREFIX" default:"." description:"prefix for commands"`
+	Broker    string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
+	TopicRoot string   `short:"t" long:"topic-root" env:"GOWON_TOPIC_ROOT" default:"/gowon" description:"mqtt topic root"`
+	Filters   []string `short:"f" long:"filters" env:"GOWON_FILTERS" env-delim:"," description:"filters to apply"`
 }
 
 const (
@@ -86,13 +87,13 @@ func main() {
 		irccon.SendRaw("CAP REQ :server-time")
 	})
 
-	mqttOpts.OnConnect = createOnConnectHandler(irccon, opts.Filters)
+	mqttOpts.OnConnect = createOnConnectHandler(irccon, opts.Filters, opts.TopicRoot)
 	c := mqtt.NewClient(mqttOpts)
 
-	privMsgHandler := createIRCHandler(c, "/gowon/input")
+	privMsgHandler := createIRCHandler(c, opts.TopicRoot+"/input")
 	irccon.AddCallback("PRIVMSG", privMsgHandler)
 
-	ircRawHandler := createIRCHandler(c, "/gowon/raw/input")
+	ircRawHandler := createIRCHandler(c, opts.TopicRoot+"/raw/input")
 	irccon.AddCallback("*", ircRawHandler)
 
 	retrier := retry.NewRetrier(5, 100*time.Millisecond, 5*time.Second)
