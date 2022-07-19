@@ -15,6 +15,8 @@ github.com/gowon-irc/go-gowon v0.0.0-20211017030812-504fef2a8ace h1:jsV+5wijpTb5
 github.com/gowon-irc/go-gowon v0.0.0-20211017030812-504fef2a8ace/go.mod h1:iY2WKgdQI1tsyd+lYFioxAnb5+8FQlJ9vqCTAUoq8QQ=
 github.com/gowon-irc/go-gowon v0.0.0-20211017190628-9a3e88e0f3d4 h1:kSkEX0+KMQM1ybsCBc3nxCfva8w7x88r2k1ZSpJ28Uo=
 github.com/gowon-irc/go-gowon v0.0.0-20211017190628-9a3e88e0f3d4/go.mod h1:iY2WKgdQI1tsyd+lYFioxAnb5+8FQlJ9vqCTAUoq8QQ=
+github.com/gowon-irc/go-gowon v0.0.0-20220719115350-ec869e1addf7 h1:MS54NNOVNewuPr984+SDs+xdlznYtfngPjNK/ZFIGhU=
+github.com/gowon-irc/go-gowon v0.0.0-20220719115350-ec869e1addf7/go.mod h1:iY2WKgdQI1tsyd+lYFioxAnb5+8FQlJ9vqCTAUoq8QQ=
 github.com/gowon-irc/gowon v0.0.0-20211012014610-ece6c2510654 h1:xJ2w8gizoZ+7LLE1dPeLUt8mddzI9pknOvAdO4iY9VA=
 github.com/gowon-irc/gowon v0.0.0-20211012014610-ece6c2510654/go.mod h1:Qx8xz3LnjqnCxG6gTrKW6IWDdl4FTLvQVmBZEI5BAzk=
 github.com/jessevdk/go-flags v1.5.0 h1:1jKYvbxEjfUl0fmqTCOfonvskHHXMjBySTLW4y9LFvc=
