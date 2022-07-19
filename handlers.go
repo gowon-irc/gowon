@@ -80,6 +80,12 @@ func createMessageHandler(irccon *irc.Connection, filters []string) mqtt.Message
 	}
 }
 
+func createSendRawHandler(irccon *irc.Connection) mqtt.MessageHandler {
+	return func(client mqtt.Client, msg mqtt.Message) {
+		irccon.SendRaw(string(msg.Payload()))
+	}
+}
+
 func defaultPublishHandler(c mqtt.Client, msg mqtt.Message) {
 	log.Printf("unexpected message:  %s\n", msg)
 }
@@ -96,10 +102,13 @@ func createOnConnectHandler(irccon *irc.Connection, filters []string) func(mqtt.
 	log.Println("connected to broker")
 
 	mh := createMessageHandler(irccon, filters)
+	rh := createSendRawHandler(irccon)
 
 	return func(client mqtt.Client) {
 		client.Subscribe("/gowon/output", 0, mh)
-
 		log.Printf("Subscription to /gowon/output complete")
+
+		client.Subscribe("/gowon/raw/output", 0, rh)
+		log.Printf("Subscription to /gowon/raw/output complete")
 	}
 }

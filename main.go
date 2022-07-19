@@ -90,8 +90,8 @@ func main() {
 	privMsgHandler := createIRCHandler(c, "/gowon/input")
 	irccon.AddCallback("PRIVMSG", privMsgHandler)
 
-	rawHandler := createIRCHandler(c, "/gowon/raw/input")
-	irccon.AddCallback("*", rawHandler)
+	ircRawHandler := createIRCHandler(c, "/gowon/raw/input")
+	irccon.AddCallback("*", ircRawHandler)
 
 	retrier := retry.NewRetrier(5, 100*time.Millisecond, 5*time.Second)
 	err = retrier.Run(func() error {
