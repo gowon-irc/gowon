@@ -1,8 +1,11 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
+	"os"
+	"strings"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
@@ -38,7 +41,7 @@ func main() {
 
 	_, err := flags.Parse(&opts)
 	if err != nil {
-		log.Fatal(err)
+		os.Exit(1)
 	}
 
 	for _, f := range opts.Filters {
@@ -62,7 +65,14 @@ func main() {
 	irccon := irc.IRC(opts.Nick, opts.User)
 	irccon.VerboseCallbackHandler = opts.Verbose
 	irccon.Debug = opts.Debug
+
 	irccon.UseTLS = opts.UseTLS
+	if opts.UseTLS {
+		irccon.TLSConfig = &tls.Config{
+			ServerName: strings.Split(opts.Server, ":")[0],
+			MinVersion: tls.VersionTLS12,
+		}
+	}
 
 	if opts.Password != "" {
 		irccon.Password = opts.Password
