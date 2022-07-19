@@ -87,8 +87,11 @@ func main() {
 	mqttOpts.OnConnect = createOnConnectHandler(irccon, opts.Filters)
 	c := mqtt.NewClient(mqttOpts)
 
-	ircHandler := createIRCHandler(c)
-	irccon.AddCallback("PRIVMSG", ircHandler)
+	privMsgHandler := createIRCHandler(c, "/gowon/input")
+	irccon.AddCallback("PRIVMSG", privMsgHandler)
+
+	rawHandler := createIRCHandler(c, "/gowon/raw/input")
+	irccon.AddCallback("*", rawHandler)
 
 	retrier := retry.NewRetrier(5, 100*time.Millisecond, 5*time.Second)
 	err = retrier.Run(func() error {

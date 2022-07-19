@@ -10,16 +10,32 @@ import (
 	irc "github.com/thoj/go-ircevent"
 )
 
-func createIRCHandler(c mqtt.Client) func(event *irc.Event) {
+func createIRCHandler(c mqtt.Client, topic string) func(event *irc.Event) {
 	return func(event *irc.Event) {
 		go func(event *irc.Event) {
+			var msg, dest, command, args string
+
+			if event.Code == "PRIVMSG" {
+				msg = event.Arguments[1]
+				dest = event.Arguments[0]
+				command = gowon.GetCommand(event.Arguments[1])
+				args = gowon.GetArgs(event.Arguments[1])
+			}
+
 			m := &gowon.Message{
-				Module:  "gowon",
-				Msg:     event.Arguments[1],
-				Nick:    event.Nick,
-				Dest:    event.Arguments[0],
-				Command: gowon.GetCommand(event.Arguments[1]),
-				Args:    gowon.GetArgs(event.Arguments[1]),
+				Module:    "gowon",
+				Nick:      event.Nick,
+				Code:      event.Code,
+				Raw:       event.Raw,
+				Host:      event.Host,
+				Source:    event.Host,
+				User:      event.User,
+				Arguments: event.Arguments,
+				Tags:      event.Tags,
+				Msg:       msg,
+				Dest:      dest,
+				Command:   command,
+				Args:      args,
 			}
 			mj, err := json.Marshal(m)
 			if err != nil {
@@ -28,7 +44,7 @@ func createIRCHandler(c mqtt.Client) func(event *irc.Event) {
 				return
 			}
 
-			c.Publish("/gowon/input", 0, false, mj)
+			c.Publish(topic, 0, false, mj)
 		}(event)
 	}
 }
