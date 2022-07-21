@@ -7,55 +7,59 @@ import (
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
+	"github.com/ergochat/irc-go/ircevent"
+	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/gowon-irc/go-gowon"
-	irc "github.com/thoj/go-ircevent"
 )
 
-func createIRCHandler(c mqtt.Client, topic string) func(event *irc.Event) {
-	return func(event *irc.Event) {
-		go func(event *irc.Event) {
-			var msg, dest, command, args string
+func createIRCHandler(c mqtt.Client, topic string) func(event ircmsg.Message) {
+	return func(event ircmsg.Message) {
+		nuh, err := ircmsg.ParseNUH(event.Source)
+		if err != nil {
+			log.Println(err)
+		}
 
-			if event.Code == "PRIVMSG" {
-				msg = event.Arguments[1]
-				dest = event.Arguments[0]
-				command = gowon.GetCommand(event.Arguments[1])
-				args = gowon.GetArgs(event.Arguments[1])
-			}
+		line, err := event.Line()
+		if err != nil {
+			log.Println(err)
+		}
 
-			nick := event.Nick
-			if nick == "" {
-				nick = event.Source
-			}
+		var msg, dest, command, args string
 
-			m := &gowon.Message{
-				Module:    "gowon",
-				Nick:      nick,
-				Code:      event.Code,
-				Raw:       event.Raw,
-				Host:      event.Host,
-				Source:    event.Host,
-				User:      event.User,
-				Arguments: event.Arguments,
-				Tags:      event.Tags,
-				Msg:       msg,
-				Dest:      dest,
-				Command:   command,
-				Args:      args,
-			}
-			mj, err := json.Marshal(m)
-			if err != nil {
-				log.Print(err)
+		if event.Command == "PRIVMSG" {
+			msg = event.Params[1]
+			dest = event.Params[0]
+			command = gowon.GetCommand(event.Params[1])
+			args = gowon.GetArgs(event.Params[1])
+		}
 
-				return
-			}
+		m := &gowon.Message{
+			Module:    "gowon",
+			Nick:      event.Nick(),
+			Code:      event.Command,
+			Raw:       line,
+			Host:      nuh.Host,
+			Source:    event.Source,
+			User:      nuh.User,
+			Arguments: event.Params,
+			Tags:      event.AllTags(),
+			Msg:       msg,
+			Dest:      dest,
+			Command:   command,
+			Args:      args,
+		}
+		mj, err := json.Marshal(m)
+		if err != nil {
+			log.Println(err)
 
-			c.Publish(topic, 0, false, mj)
-		}(event)
+			return
+		}
+
+		c.Publish(topic, 0, false, mj)
 	}
 }
 
-func createMessageHandler(irccon *irc.Connection, filters []string) mqtt.MessageHandler {
+func createMessageHandler(irccon *ircevent.Connection, filters []string) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
 		m, err := gowon.CreateMessageStruct(msg.Payload())
 		if err != nil {
@@ -86,7 +90,7 @@ func createMessageHandler(irccon *irc.Connection, filters []string) mqtt.Message
 	}
 }
 
-func createSendRawHandler(irccon *irc.Connection) mqtt.MessageHandler {
+func createSendRawHandler(irccon *ircevent.Connection) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
 		irccon.SendRaw(string(msg.Payload()))
 	}
@@ -104,7 +108,7 @@ func onRecconnectingHandler(c mqtt.Client, opts *mqtt.ClientOptions) {
 	log.Println("attempting to reconnect to broker")
 }
 
-func createOnConnectHandler(irccon *irc.Connection, filters []string, topicRoot string) func(mqtt.Client) {
+func createOnConnectHandler(irccon *ircevent.Connection, filters []string, topicRoot string) func(mqtt.Client) {
 	log.Println("connected to broker")
 
 	topic := topicRoot + "/output"

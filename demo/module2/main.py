@@ -2,6 +2,7 @@
 
 import datetime
 import json
+import time
 
 import configargparse
 import paho.mqtt.client as mqtt
@@ -68,7 +69,14 @@ def main():
     client.on_connect = on_connect
     client.on_message = on_message
 
-    client.connect(opts.broker_host, opts.broker_port)
+    for i in range(12):
+        try:
+            client.connect(opts.broker_host, opts.broker_port)
+        except ConnectionRefusedError:
+            print("connection refused, retrying after 5 seconds")
+            time.sleep(5)
+        else:
+            break
 
     client.loop_forever()
 

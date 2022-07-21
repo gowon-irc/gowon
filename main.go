@@ -12,7 +12,9 @@ import (
 	"github.com/flowchartsman/retry"
 	"github.com/gowon-irc/go-gowon"
 	"github.com/jessevdk/go-flags"
-	irc "github.com/thoj/go-ircevent"
+
+	"github.com/ergochat/irc-go/ircevent"
+	"github.com/ergochat/irc-go/ircmsg"
 )
 
 type Options struct {
@@ -63,9 +65,13 @@ func main() {
 	mqttOpts.OnConnectionLost = onConnectionLostHandler
 	mqttOpts.OnReconnecting = onRecconnectingHandler
 
-	irccon := irc.IRC(opts.Nick, opts.User)
-	irccon.VerboseCallbackHandler = opts.Verbose
-	irccon.Debug = opts.Debug
+	irccon := ircevent.Connection{
+		Server: opts.Server,
+		Nick:   opts.Nick,
+		User:   opts.User,
+		Debug:  opts.Debug,
+	}
+	// ircevent.VerboseCallbackHandler = opts.Verbose
 
 	irccon.UseTLS = opts.UseTLS
 	if opts.UseTLS {
@@ -79,7 +85,7 @@ func main() {
 		irccon.Password = opts.Password
 	}
 
-	irccon.AddCallback("001", func(e *irc.Event) {
+	irccon.AddConnectCallback(func(e ircmsg.Message) {
 		for _, channel := range opts.Channels {
 			irccon.Join(channel)
 		}
@@ -87,7 +93,7 @@ func main() {
 		irccon.SendRaw("CAP REQ :server-time")
 	})
 
-	mqttOpts.OnConnect = createOnConnectHandler(irccon, opts.Filters, opts.TopicRoot)
+	mqttOpts.OnConnect = createOnConnectHandler(&irccon, opts.Filters, opts.TopicRoot)
 	c := mqtt.NewClient(mqttOpts)
 
 	privMsgHandler := createIRCHandler(c, opts.TopicRoot+"/input")
@@ -98,7 +104,7 @@ func main() {
 
 	retrier := retry.NewRetrier(5, 100*time.Millisecond, 5*time.Second)
 	err = retrier.Run(func() error {
-		return irccon.Connect(opts.Server)
+		return irccon.Connect()
 	})
 	if err != nil {
 		log.Fatal(err)
