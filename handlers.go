@@ -23,9 +23,14 @@ func createIRCHandler(c mqtt.Client, topic string) func(event *irc.Event) {
 				args = gowon.GetArgs(event.Arguments[1])
 			}
 
+			nick := event.Nick
+			if nick == "" {
+				nick = event.Source
+			}
+
 			m := &gowon.Message{
 				Module:    "gowon",
-				Nick:      event.Nick,
+				Nick:      nick,
 				Code:      event.Code,
 				Raw:       event.Raw,
 				Host:      event.Host,
