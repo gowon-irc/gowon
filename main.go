@@ -66,10 +66,11 @@ func main() {
 	mqttOpts.OnReconnecting = onRecconnectingHandler
 
 	irccon := ircevent.Connection{
-		Server: opts.Server,
-		Nick:   opts.Nick,
-		User:   opts.User,
-		Debug:  opts.Debug,
+		Server:      opts.Server,
+		Nick:        opts.Nick,
+		User:        opts.User,
+		Debug:       opts.Debug,
+		RequestCaps: []string{"server-time"},
 	}
 	// ircevent.VerboseCallbackHandler = opts.Verbose
 
@@ -89,8 +90,6 @@ func main() {
 		for _, channel := range opts.Channels {
 			irccon.Join(channel)
 		}
-
-		irccon.SendRaw("CAP REQ :server-time")
 	})
 
 	mqttOpts.OnConnect = createOnConnectHandler(&irccon, opts.Filters, opts.TopicRoot)
