@@ -100,7 +100,10 @@ func main() {
 	irccon.AddCallback("PRIVMSG", privMsgHandler)
 
 	ircRawHandler := createIRCHandler(c, opts.TopicRoot+"/raw/input")
-	irccon.AddCallback("*", ircRawHandler)
+	// irccon.AddCallback("*", ircRawHandler)
+	for _, c := range []string{"JOIN", "332", "353"} {
+		irccon.AddCallback(c, ircRawHandler)
+	}
 
 	retrier := retry.NewRetrier(5, 100*time.Millisecond, 5*time.Second)
 	err = retrier.Run(func() error {
