@@ -83,7 +83,9 @@ func main() {
 	}
 
 	if opts.Password != "" {
-		irccon.Password = opts.Password
+		irccon.UseSASL = true
+		irccon.SASLLogin = opts.Nick
+		irccon.SASLPassword = opts.Password
 	}
 
 	irccon.AddConnectCallback(func(e ircmsg.Message) {
