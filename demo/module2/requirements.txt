@@ -1,2 +1,2 @@
 paho-mqtt==1.6.0
-ConfigArgParse==1.5.3
+ConfigArgParse==1.7
