@@ -4,11 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"net/http"
 	"strings"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
+	"github.com/gin-gonic/gin"
 	"github.com/gowon-irc/go-gowon"
 )
 
@@ -56,6 +58,25 @@ func createIRCHandler(c mqtt.Client, topic string) func(event ircmsg.Message) {
 		}
 
 		c.Publish(topic, 0, false, mj)
+	}
+}
+
+func createHttpHandler(irccon *ircevent.Connection) func(*gin.Context) {
+	return func(c *gin.Context) {
+		var m gowon.Message
+
+		if err := c.BindJSON(&m); err != nil {
+			return
+		}
+
+		for _, line := range strings.Split(m.Msg, "\n") {
+			coloured := colourMsg(line)
+			for _, sm := range splitMsg(coloured, 400) {
+				irccon.Privmsg(m.Dest, sm)
+			}
+		}
+
+		c.IndentedJSON(http.StatusCreated, m)
 	}
 }
 

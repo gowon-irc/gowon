@@ -10,6 +10,7 @@ import (
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/flowchartsman/retry"
+	"github.com/gin-gonic/gin"
 	"github.com/gowon-irc/go-gowon"
 	"github.com/jessevdk/go-flags"
 
@@ -29,6 +30,7 @@ type Options struct {
 	Prefix    string   `short:"P" long:"prefix" env:"GOWON_PREFIX" default:"." description:"prefix for commands"`
 	Broker    string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
 	TopicRoot string   `short:"t" long:"topic-root" env:"GOWON_TOPIC_ROOT" default:"/gowon" description:"mqtt topic root"`
+	HttpPort  int      `short:"H" long:"http-port" env:"GOWON_HTTP_PORT" default:"8080" description:"http port"`
 	Filters   []string `short:"f" long:"filters" env:"GOWON_FILTERS" env-delim:"," description:"filters to apply"`
 }
 
@@ -106,6 +108,9 @@ func main() {
 		irccon.AddCallback(c, ircRawHandler)
 	}
 
+	httpRouter := gin.Default()
+	httpRouter.POST("/message", createHttpHandler(&irccon))
+
 	retrier := retry.NewRetrier(5, 100*time.Millisecond, 5*time.Second)
 	err = retrier.Run(func() error {
 		return irccon.Connect()
@@ -117,6 +122,12 @@ func main() {
 	if token := c.Connect(); token.Wait() && token.Error() != nil {
 		panic(token.Error())
 	}
+
+	go func() {
+		if err := httpRouter.Run(fmt.Sprintf("0.0.0.0:%d", opts.HttpPort)); err != nil {
+			log.Fatal(err)
+		}
+	}()
 
 	irccon.Loop()
 

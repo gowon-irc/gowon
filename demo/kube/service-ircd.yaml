@@ -4,9 +4,9 @@ kind: Service
 metadata:
   name: oragono
 spec:
+  selector:
+    app.kubernetes.io/name: oragono
   ports:
     - name: ircd
       port: 6667
       targetPort: ircd
-  selector:
-    app.kubernetes.io/name: oragono

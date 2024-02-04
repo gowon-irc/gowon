@@ -1,24 +1,36 @@
 ---
-apiVersion: skaffold/v2beta23
+apiVersion: skaffold/v2beta26
 kind: Config
 build:
   artifacts:
     - image: gowon
       context: ./..
-      docker:
-        dockerfile: Dockerfile
+      ko:
+        dependencies:
+          paths:
+            - "*.go"
+          ignore:
+            - "*_test.go"
     - image: module1
       context: module1
-      docker:
-        dockerfile: Dockerfile
-    - image: module2
-      context: module2
-      docker:
-        dockerfile: Dockerfile
+      ko:
+        dependencies:
+          paths:
+            - "*.go"
+          ignore:
+            - "*_test.go"
+    # - image: module2
+    #   context: module2
+    #   docker:
+    #     dockerfile: Dockerfile
     - image: module3
       context: module3
-      docker:
-        dockerfile: Dockerfile
+      ko:
+        dependencies:
+          paths:
+            - "*.go"
+          ignore:
+            - "*_test.go"
 deploy:
   kubectl:
     manifests:
