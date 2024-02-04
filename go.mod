@@ -10,7 +10,7 @@ require (
 	github.com/gowon-irc/go-gowon v0.0.0-20220719115350-ec869e1addf7
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/pkg/errors v0.9.1
-	github.com/stretchr/testify v1.8.3
+	github.com/stretchr/testify v1.8.4
 )
 
 require (
