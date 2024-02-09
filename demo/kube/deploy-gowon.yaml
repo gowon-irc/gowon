@@ -30,6 +30,16 @@ spec:
               value: gowon
             - name: GOWON_CHANNELS
               value: "#gowon,#gowon2"
+            - name: GOWON_CONFIG_DIR
+              value: /config
           ports:
             - containerPort: 8080
               name: http
+          volumeMounts:
+            - name: config
+              mountPath: /config/config.yaml
+              subPath: config.yaml
+      volumes:
+        - name: config
+          configMap:
+            name: gowon-config

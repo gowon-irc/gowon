@@ -80,26 +80,13 @@ func createHttpHandler(irccon *ircevent.Connection) func(*gin.Context) {
 	}
 }
 
-func createMessageHandler(irccon *ircevent.Connection, filters []string) mqtt.MessageHandler {
+func createMessageHandler(irccon *ircevent.Connection) mqtt.MessageHandler {
 	return func(client mqtt.Client, msg mqtt.Message) {
 		m, err := gowon.CreateMessageStruct(msg.Payload())
 		if err != nil {
 			log.Print(err)
 
 			return
-		}
-
-		for _, f := range filters {
-			filtered, err := gowon.Filter(&m, f)
-
-			if err != nil {
-				break
-			}
-
-			if filtered {
-				log.Printf(`Message "%s" has been filtered by filter "%s"`, m.Msg, f)
-				return
-			}
 		}
 
 		for _, line := range strings.Split(m.Msg, "\n") {
@@ -129,13 +116,13 @@ func onRecconnectingHandler(c mqtt.Client, opts *mqtt.ClientOptions) {
 	log.Println("attempting to reconnect to broker")
 }
 
-func createOnConnectHandler(irccon *ircevent.Connection, filters []string, topicRoot string) func(mqtt.Client) {
+func createOnConnectHandler(irccon *ircevent.Connection, topicRoot string) func(mqtt.Client) {
 	log.Println("connected to broker")
 
 	topic := topicRoot + "/output"
 	rawTopic := topicRoot + "/raw/output"
 
-	mh := createMessageHandler(irccon, filters)
+	mh := createMessageHandler(irccon)
 	rh := createSendRawHandler(irccon)
 
 	return func(client mqtt.Client) {

@@ -5,59 +5,54 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/flowchartsman/retry"
 	"github.com/gin-gonic/gin"
-	"github.com/gowon-irc/go-gowon"
 	"github.com/jessevdk/go-flags"
 
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
 )
 
-type Options struct {
-	Server    string   `short:"s" long:"server" env:"GOWON_SERVER" required:"true" description:"IRC server:port"`
-	User      string   `short:"u" long:"user" env:"GOWON_USER" required:"true" description:"Bot user"`
-	Nick      string   `short:"n" long:"nick" env:"GOWON_NICK" required:"true" description:"Bot nick"`
-	Password  string   `short:"p" long:"password" env:"GOWON_PASSWORD" description:"Bot password"`
-	Channels  []string `short:"c" long:"channels" env:"GOWON_CHANNELS" env-delim:"," required:"true" description:"Channels to join"`
-	UseTLS    bool     `short:"T" long:"tls" env:"GOWON_TLS" description:"Connect to irc server using tls"`
-	Verbose   bool     `short:"v" long:"verbose" env:"GOWON_VERBOSE" description:"Verbose logging"`
-	Debug     bool     `short:"d" long:"debug" env:"GOWON_DEBUG" description:"Debug logging"`
-	Prefix    string   `short:"P" long:"prefix" env:"GOWON_PREFIX" default:"." description:"prefix for commands"`
-	Broker    string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
-	TopicRoot string   `short:"t" long:"topic-root" env:"GOWON_TOPIC_ROOT" default:"/gowon" description:"mqtt topic root"`
-	HttpPort  int      `short:"H" long:"http-port" env:"GOWON_HTTP_PORT" default:"8080" description:"http port"`
-	Filters   []string `short:"f" long:"filters" env:"GOWON_FILTERS" env-delim:"," description:"filters to apply"`
-}
-
 const (
 	mqttConnectRetryInternal = 5
 	mqttDisconnectTimeout    = 1000
+	configFilename           = "config.yaml"
 )
 
 func main() {
 	log.Println("starting gowon")
 
-	opts := Options{}
+	opts := Config{}
 
 	_, err := flags.Parse(&opts)
 	if err != nil {
 		os.Exit(1)
 	}
 
-	for _, f := range opts.Filters {
-		err := gowon.CheckFilter(f)
-		if err != nil {
+	cm := NewConfigManager()
+	cm.AddOpts(opts)
+	if opts.ConfigDir != "" {
+		if err := cm.OpenFile(filepath.Join(opts.ConfigDir, configFilename)); err != nil {
 			log.Fatal(err)
 		}
 	}
 
+	cfg, err := cm.Merge()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if err := cfg.Validate(); err != nil {
+		log.Fatal(err)
+	}
+
 	mqttOpts := mqtt.NewClientOptions()
-	mqttOpts.AddBroker(fmt.Sprintf("tcp://%s", opts.Broker))
+	mqttOpts.AddBroker(fmt.Sprintf("tcp://%s", cfg.Broker))
 	mqttOpts.SetClientID("gowon")
 	mqttOpts.SetConnectRetry(true)
 	mqttOpts.SetConnectRetryInterval(mqttConnectRetryInternal * time.Second)
@@ -68,41 +63,41 @@ func main() {
 	mqttOpts.OnReconnecting = onRecconnectingHandler
 
 	irccon := ircevent.Connection{
-		Server:      opts.Server,
-		Nick:        opts.Nick,
-		User:        opts.User,
-		Debug:       opts.Debug,
+		Server:      cfg.Server,
+		Nick:        cfg.Nick,
+		User:        cfg.User,
+		Debug:       cfg.Debug,
 		RequestCaps: []string{"server-time"},
 	}
-	// ircevent.VerboseCallbackHandler = opts.Verbose
+	// ircevent.VerboseCallbackHandler = cfg.Verbose
 
-	irccon.UseTLS = opts.UseTLS
-	if opts.UseTLS {
+	irccon.UseTLS = cfg.UseTLS
+	if cfg.UseTLS {
 		irccon.TLSConfig = &tls.Config{
-			ServerName: strings.Split(opts.Server, ":")[0],
+			ServerName: strings.Split(cfg.Server, ":")[0],
 			MinVersion: tls.VersionTLS12,
 		}
 	}
 
-	if opts.Password != "" {
+	if cfg.Password != "" {
 		irccon.UseSASL = true
-		irccon.SASLLogin = opts.Nick
-		irccon.SASLPassword = opts.Password
+		irccon.SASLLogin = cfg.Nick
+		irccon.SASLPassword = cfg.Password
 	}
 
 	irccon.AddConnectCallback(func(e ircmsg.Message) {
-		for _, channel := range opts.Channels {
+		for _, channel := range cfg.Channels {
 			irccon.Join(channel)
 		}
 	})
 
-	mqttOpts.OnConnect = createOnConnectHandler(&irccon, opts.Filters, opts.TopicRoot)
+	mqttOpts.OnConnect = createOnConnectHandler(&irccon, cfg.TopicRoot)
 	c := mqtt.NewClient(mqttOpts)
 
-	privMsgHandler := createIRCHandler(c, opts.TopicRoot+"/input")
+	privMsgHandler := createIRCHandler(c, cfg.TopicRoot+"/input")
 	irccon.AddCallback("PRIVMSG", privMsgHandler)
 
-	ircRawHandler := createIRCHandler(c, opts.TopicRoot+"/raw/input")
+	ircRawHandler := createIRCHandler(c, cfg.TopicRoot+"/raw/input")
 	// irccon.AddCallback("*", ircRawHandler)
 	for _, c := range []string{"JOIN", "332", "353"} {
 		irccon.AddCallback(c, ircRawHandler)
@@ -124,7 +119,7 @@ func main() {
 	}
 
 	go func() {
-		if err := httpRouter.Run(fmt.Sprintf("0.0.0.0:%d", opts.HttpPort)); err != nil {
+		if err := httpRouter.Run(fmt.Sprintf("0.0.0.0:%s", cfg.HttpPort)); err != nil {
 			log.Fatal(err)
 		}
 	}()
