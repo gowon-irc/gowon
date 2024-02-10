@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"strings"
 	"time"
 
@@ -36,10 +35,8 @@ func main() {
 
 	cm := NewConfigManager()
 	cm.AddOpts(opts)
-	if opts.ConfigDir != "" {
-		if err := cm.OpenFile(filepath.Join(opts.ConfigDir, configFilename)); err != nil {
-			log.Fatal(err)
-		}
+	if err := cm.LoadDirectory(opts.ConfigDir); err != nil {
+		log.Println(err)
 	}
 
 	cfg, err := cm.Merge()

@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 
 	"dario.cat/mergo"
@@ -33,7 +35,7 @@ type Config struct {
 	Broker    string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
 	TopicRoot string   `short:"t" long:"topic-root" env:"GOWON_TOPIC_ROOT" default:"/gowon" description:"mqtt topic root"`
 	HttpPort  string   `short:"H" long:"http-port" env:"GOWON_HTTP_PORT" default:"8080" description:"http port"`
-	ConfigDir string   `short:"C" long:"config-dir" env:"GOWON_CONFIG_DIR" description:"config directory"`
+	ConfigDir string   `short:"C" long:"config-dir" env:"GOWON_CONFIG_DIR" default:"." description:"config directory"`
 
 	Commands []Command
 }
@@ -90,6 +92,22 @@ func (c *ConfigManager) OpenFile(filename string) error {
 	return nil
 }
 
+func (c *ConfigManager) LoadDirectory(directory string) error {
+	files, _ := filepath.Glob(filepath.Join(directory, "*.yaml"))
+
+	if files == nil {
+		return fmt.Errorf("Error: no files found in %s", directory)
+	}
+
+	for _, file := range files {
+		if err := c.OpenFile(file); err != nil {
+			return fmt.Errorf("Error: could not open %s", file)
+		}
+	}
+
+	return nil
+}
+
 func (c *ConfigManager) AddOpts(config Config) {
 	c.Opts = config
 }
@@ -102,7 +120,7 @@ func (c *ConfigManager) Merge() (Config, error) {
 	}
 
 	for _, cfg := range c.ConfigFiles {
-		if err := mergo.Merge(&config, cfg, mergo.WithOverride); err != nil {
+		if err := mergo.Merge(&config, cfg, mergo.WithOverride, mergo.WithAppendSlice); err != nil {
 			return config, err
 		}
 	}

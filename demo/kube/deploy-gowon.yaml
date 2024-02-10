@@ -39,7 +39,13 @@ spec:
             - name: config
               mountPath: /config/config.yaml
               subPath: config.yaml
+            - name: config2
+              mountPath: /config/config2.yaml
+              subPath: config2.yaml
       volumes:
         - name: config
           configMap:
             name: gowon-config
+        - name: config2
+          configMap:
+            name: gowon-config2

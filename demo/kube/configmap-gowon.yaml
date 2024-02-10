@@ -9,3 +9,14 @@ data:
       - command: test
         endpoint: http://test:8080
         help: test command
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gowon-config2
+data:
+  config2.yaml: |
+    commands:
+      - command: test2
+        endpoint: http://test2:8080
+        help: test command 2
