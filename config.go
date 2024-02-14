@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	serverRegex     = `[a-zA-Z\.]+:\d+`
-	ircChannelRegex = `\#[a-zA-Z]+`
+	serverRegex     = `^[\w\-\.]+:([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$`
+	ircChannelRegex = `^[#&][^ ,\n\x07]+$`
 )
 
 type Command struct {
@@ -52,7 +52,7 @@ func (c Config) Validate() error {
 			validation.Required,
 			validation.Each(validation.Match(regexp.MustCompile(ircChannelRegex)).Error("must be a valid irc channel name")),
 		),
-		validation.Field(&c.Broker, validation.Match(regexp.MustCompile(serverRegex)).Error("must be host:port")),
+		validation.Field(&c.Broker, validation.Match(regexp.MustCompile(serverRegex)).Error("must be a valid host:port")),
 		validation.Field(&c.HttpPort, is.Port),
 	)
 }
