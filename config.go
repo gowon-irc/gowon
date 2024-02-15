@@ -65,6 +65,7 @@ type ConfigManager struct {
 func NewConfigManager() *ConfigManager {
 	cm := ConfigManager{}
 	cm.ConfigFiles = make(map[string]Config)
+	cm.Opts = Config{}
 
 	return &cm
 }
@@ -94,10 +95,6 @@ func (c *ConfigManager) OpenFile(filename string) error {
 
 func (c *ConfigManager) LoadDirectory(directory string) error {
 	files, _ := filepath.Glob(filepath.Join(directory, "*.yaml"))
-
-	if files == nil {
-		return fmt.Errorf("Error: no files found in %s", directory)
-	}
 
 	for _, file := range files {
 		if err := c.OpenFile(file); err != nil {

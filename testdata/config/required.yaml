@@ -1,0 +1,6 @@
+---
+server: irc.kwlchat.net:6997
+user: gowon
+nick: gowon
+channels:
+  - "#owls"
