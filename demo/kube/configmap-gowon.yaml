@@ -6,9 +6,9 @@ metadata:
 data:
   config.yaml: |
     commands:
-      - command: test
-        endpoint: http://test:8080
-        help: test command
+      - command: cyan
+        endpoint: http://module4:8080/message
+        help: make text cyan
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -17,6 +17,6 @@ metadata:
 data:
   config2.yaml: |
     commands:
-      - command: test2
-        endpoint: http://test2:8080
-        help: test command 2
+      - command: rev
+        endpoint: http://module5:8080
+        help: reverse text
