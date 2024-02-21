@@ -21,6 +21,14 @@ type Command struct {
 	Command  string
 	Endpoint string
 	Help     string
+	Priority int
+}
+
+func (c Command) Validate() error {
+	return validation.ValidateStruct(&c,
+		validation.Field(&c.Command, validation.Required, is.Alphanumeric),
+		validation.Field(&c.Endpoint, is.URL),
+	)
 }
 
 type Config struct {

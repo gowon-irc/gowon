@@ -96,7 +96,7 @@ func TestNewConfigManager(t *testing.T) {
 	assert.Len(t, cm.ConfigFiles, 0)
 }
 
-func TestConfigOpenFile(t *testing.T) {
+func TestConfigManagerOpenFile(t *testing.T) {
 	cases := map[string]struct {
 		fn     string
 		err    error
