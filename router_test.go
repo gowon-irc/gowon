@@ -10,7 +10,7 @@ func createCommandRouterFromList(in []string) *CommandRouter {
 	cr := CommandRouter{}
 
 	for _, i := range in {
-		cmd := Command{Command: i}
+		cmd := &RouterCommand{Command: i}
 		cr.Commands = append(cr.Commands, cmd)
 	}
 
@@ -62,10 +62,18 @@ func TestConfigRoute(t *testing.T) {
 			out, err := cfg.Route(tc.command)
 
 			if !tc.returnErr {
-				assert.Equal(t, tc.command, out)
+				assert.Equal(t, tc.command, out.Command)
 			} else {
 				assert.Equal(t, err.Error(), noCommandRoutedErrMsg)
 			}
 		})
 	}
+}
+
+func TestCommandRouterAdd(t *testing.T) {
+	cr := CommandRouter{}
+	cmd := &Command{Command: "command"}
+	cr.Add(cmd)
+
+	assert.Equal(t, "command", cr.Commands[0].Command)
 }
