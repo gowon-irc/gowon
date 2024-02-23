@@ -7,62 +7,41 @@ import (
 	"regexp"
 
 	"dario.cat/mergo"
-	"github.com/go-ozzo/ozzo-validation/is"
-	validation "github.com/go-ozzo/ozzo-validation/v4"
+	"github.com/go-playground/validator/v10"
 	"gopkg.in/yaml.v3"
 )
 
 const (
-	serverRegex     = `^[\w\-\.]+:([1-9][0-9]{0,3}|[1-5][0-9]{4}|6[0-4][0-9]{3}|65[0-4][0-9]{2}|655[0-2][0-9]|6553[0-5])$`
 	ircChannelRegex = `^[#&][^ ,\n\x07]+$`
 )
 
 type Command struct {
-	Command  string
-	Endpoint string
+	Command  string `validate:"alphanum"`
+	Endpoint string `validate:"url"`
 	Help     string
 	Priority int
 }
 
-func (c Command) Validate() error {
-	return validation.ValidateStruct(&c,
-		validation.Field(&c.Command, validation.Required, is.Alphanumeric),
-		validation.Field(&c.Endpoint, is.URL),
-	)
-}
-
 type Config struct {
-	Server    string   `short:"s" long:"server" env:"GOWON_SERVER" description:"IRC server:port"`
-	User      string   `short:"u" long:"user" env:"GOWON_USER" description:"Bot user"`
-	Nick      string   `short:"n" long:"nick" env:"GOWON_NICK" description:"Bot nick"`
+	Server    string   `short:"s" long:"server" env:"GOWON_SERVER" description:"IRC server:port" validate:"required,hostname_port"`
+	User      string   `short:"u" long:"user" env:"GOWON_USER" description:"Bot user" validate:"required,alphanum"`
+	Nick      string   `short:"n" long:"nick" env:"GOWON_NICK" description:"Bot nick" validate:"required,alphanum"`
 	Password  string   `short:"p" long:"password" env:"GOWON_PASSWORD" description:"Bot password"`
-	Channels  []string `short:"c" long:"channels" env:"GOWON_CHANNELS" env-delim:"," description:"Channels to join"`
+	Channels  []string `short:"c" long:"channels" env:"GOWON_CHANNELS" env-delim:"," description:"Channels to join" validate:"required,dive,irc_channel"`
 	UseTLS    bool     `short:"T" long:"tls" env:"GOWON_TLS" description:"Connect to irc server using tls"`
 	Verbose   bool     `short:"v" long:"verbose" env:"GOWON_VERBOSE" description:"Verbose logging"`
 	Debug     bool     `short:"d" long:"debug" env:"GOWON_DEBUG" description:"Debug logging"`
-	Broker    string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker"`
+	Broker    string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker" validate:"hostname_port"`
 	TopicRoot string   `short:"t" long:"topic-root" env:"GOWON_TOPIC_ROOT" default:"/gowon" description:"mqtt topic root"`
-	HttpPort  string   `short:"H" long:"http-port" env:"GOWON_HTTP_PORT" default:"8080" description:"http port"`
+	HttpPort  int      `short:"H" long:"http-port" env:"GOWON_HTTP_PORT" default:"8080" description:"http port" validate:"min=1,max=65535"`
 	ConfigDir string   `short:"C" long:"config-dir" env:"GOWON_CONFIG_DIR" default:"." description:"config directory"`
 
-	Commands []Command
+	Commands []Command `validate:"dive"`
 }
 
-func (c Config) Validate() error {
-	return validation.ValidateStruct(&c,
-		validation.Field(&c.Server,
-			validation.Required,
-			validation.Match(regexp.MustCompile(serverRegex)).Error("must be host:port"),
-		),
-		validation.Field(&c.User, validation.Required, is.Alphanumeric),
-		validation.Field(&c.Nick, validation.Required, is.Alphanumeric),
-		validation.Field(&c.Channels,
-			validation.Required,
-			validation.Each(validation.Match(regexp.MustCompile(ircChannelRegex)).Error("must be a valid irc channel name")),
-		),
-		validation.Field(&c.Broker, validation.Match(regexp.MustCompile(serverRegex)).Error("must be a valid host:port")),
-		validation.Field(&c.HttpPort, is.Port),
-	)
+func validateIrcChannel(field validator.FieldLevel) bool {
+	re := regexp.MustCompile(ircChannelRegex)
+	return re.MatchString(field.Field().String())
 }
 
 type ConfigManager struct {

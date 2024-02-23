@@ -11,6 +11,7 @@ import (
 	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/flowchartsman/retry"
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/jessevdk/go-flags"
 
 	"github.com/ergochat/irc-go/ircevent"
@@ -23,6 +24,8 @@ const (
 	configFilename           = "config.yaml"
 )
 
+var validate *validator.Validate
+
 func main() {
 	log.Println("starting gowon")
 
@@ -30,7 +33,7 @@ func main() {
 
 	_, err := flags.Parse(&opts)
 	if err != nil {
-		os.Exit(1)
+		log.Fatal(err)
 	}
 
 	cm := NewConfigManager()
@@ -44,8 +47,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if err := cfg.Validate(); err != nil {
-		log.Fatal(err)
+	validate = validator.New(validator.WithRequiredStructEnabled())
+
+	if err := validate.RegisterValidation("irc_channel", validateIrcChannel); err != nil {
+		log.Fatalf("failed to register validation, err : %v", err)
+	}
+
+	if err := validate.Struct(cfg); err != nil {
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	mqttOpts := mqtt.NewClientOptions()
@@ -116,7 +126,7 @@ func main() {
 	}
 
 	go func() {
-		if err := httpRouter.Run(fmt.Sprintf("0.0.0.0:%s", cfg.HttpPort)); err != nil {
+		if err := httpRouter.Run(fmt.Sprintf("0.0.0.0:%d", cfg.HttpPort)); err != nil {
 			log.Fatal(err)
 		}
 	}()
