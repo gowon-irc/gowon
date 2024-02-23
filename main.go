@@ -94,7 +94,9 @@ func main() {
 
 	irccon.AddConnectCallback(func(e ircmsg.Message) {
 		for _, channel := range cfg.Channels {
-			irccon.Join(channel)
+			if err = irccon.Join(channel); err != nil {
+				log.Println(err)
+			}
 		}
 	})
 
