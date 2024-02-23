@@ -1,6 +1,9 @@
 package main
 
-import "errors"
+import (
+	"errors"
+	"sort"
+)
 
 const (
 	noCommandRoutedErrMsg = "no command could be routed"
@@ -22,6 +25,12 @@ func (cr *CommandRouter) Add(cmd *Command) {
 	}
 
 	cr.Commands = append(cr.Commands, new)
+}
+
+func (cr *CommandRouter) Sort() {
+	sort.Slice(cr.Commands, func(i, j int) bool {
+		return cr.Commands[i].Priority < cr.Commands[j].Priority
+	})
 }
 
 func (cr *CommandRouter) Route(command string) (cmd *RouterCommand, err error) {
