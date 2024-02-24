@@ -11,6 +11,7 @@ import (
 
 const (
 	moduleName = "module3"
+	moduleHelp = "return message in cyan"
 )
 
 func main() {
@@ -30,6 +31,13 @@ func main() {
 		}
 
 		c.IndentedJSON(http.StatusOK, returnMsg)
+	})
+
+	r.GET("/help", func(c *gin.Context) {
+		c.IndentedJSON(http.StatusOK, &gowon.Message{
+			Module: moduleName,
+			Msg:    moduleHelp,
+		})
 	})
 
 	if err := r.Run(":8080"); err != nil {

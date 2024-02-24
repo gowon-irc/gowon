@@ -69,7 +69,7 @@ func createCommandRouterFromPriorities(in []int) *CommandRouter {
 	return &cr
 }
 
-func TestCommandRouterSort(t *testing.T) {
+func TestCommandRouterSortPriority(t *testing.T) {
 	cases := map[string]struct {
 		priorities []int
 		expected   []int
@@ -95,7 +95,7 @@ func TestCommandRouterSort(t *testing.T) {
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
 			cr := createCommandRouterFromPriorities(tc.priorities)
-			cr.Sort()
+			cr.SortPriority()
 
 			sorted := createCommandRouterFromPriorities(tc.expected)
 

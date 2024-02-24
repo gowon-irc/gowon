@@ -7,8 +7,7 @@ data:
   config.yaml: |
     commands:
       - command: cap
-        endpoint: http://module1:8080/message
-        help: capitalise message
+        endpoint: http://module1:8080
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -18,14 +17,15 @@ data:
   config2.yaml: |
     commands:
       - command: rev
-        endpoint: http://module2:8080/message
-        help: reverse text
+        endpoint: http://module2:8080
 
       - command: cyan
-        endpoint: http://module3:8080/message
-        help: make text cyan
+        endpoint: http://module3:8080
 
       - command: regextest
-        endpoint: http://module4:8080/message
+        endpoint: http://module4:8080
         regex: '.*hello.*'
-        help: hello more like goodbye
+        help: |
+          hello more like goodbye
+          some more help here
+          and some more

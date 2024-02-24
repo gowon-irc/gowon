@@ -10,6 +10,7 @@ import (
 
 const (
 	moduleName = "module2"
+	moduleHelp = "reverse message"
 )
 
 func reverse(s string) string {
@@ -22,6 +23,7 @@ func reverse(s string) string {
 
 func main() {
 	r := gin.Default()
+
 	r.POST("/message", func(c *gin.Context) {
 		var msg gowon.Message
 
@@ -37,6 +39,13 @@ func main() {
 		}
 
 		c.IndentedJSON(http.StatusOK, returnMsg)
+	})
+
+	r.GET("/help", func(c *gin.Context) {
+		c.IndentedJSON(http.StatusOK, &gowon.Message{
+			Module: moduleName,
+			Msg:    moduleHelp,
+		})
 	})
 
 	if err := r.Run(":8080"); err != nil {

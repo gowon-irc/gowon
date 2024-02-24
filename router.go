@@ -18,6 +18,7 @@ const (
 
 type RouterCommand interface {
 	Send(in *gowon.Message) *gowon.Message
+	GetHelp() string
 	GetCommand() string
 	GetPriority() int
 	Match(string) bool
@@ -27,6 +28,7 @@ type HttpCommand struct {
 	Command  string
 	Endpoint string
 	Regex    string
+	Help     string
 	Priority int
 }
 
@@ -37,7 +39,7 @@ func (hc *HttpCommand) Send(in *gowon.Message) *gowon.Message {
 	resp, err := client.R().
 		SetBody(in).
 		SetSuccessResult(&out).
-		Post(hc.Endpoint)
+		Post(hc.Endpoint + "/message")
 
 	if err != nil {
 		log.Println(err)
@@ -50,6 +52,31 @@ func (hc *HttpCommand) Send(in *gowon.Message) *gowon.Message {
 	}
 
 	return &out
+}
+
+func (hc *HttpCommand) GetHelp() string {
+	if hc.Help != "" {
+		return fmt.Sprintf("{cyan}%s{clear}: %s", hc.Command, hc.Help)
+	}
+
+	var msg gowon.Message
+
+	client := req.C()
+	resp, err := client.R().
+		SetSuccessResult(&msg).
+		Get(hc.Endpoint + "/help")
+
+	if err != nil {
+		log.Println(err)
+		return fmt.Sprintf("{cyan}%s{clear}: could not fetch help", hc.Command)
+	}
+
+	if !resp.IsSuccessState() {
+		log.Printf("Command %s returned an unsuccessful response: %s", hc.Command, resp.Status)
+		return fmt.Sprintf("{cyan}%s{clear}: no help found", hc.Command)
+	}
+
+	return fmt.Sprintf("{cyan}%s{clear}: %s", hc.Command, msg.Msg)
 }
 
 func (hc *HttpCommand) GetCommand() string {
@@ -75,6 +102,7 @@ func (hc *HttpCommand) Match(text string) bool {
 
 type InternalCommand struct {
 	Command  string
+	Help     string
 	Priority int
 	f        func(in *gowon.Message) string
 }
@@ -88,8 +116,16 @@ func (ic *InternalCommand) Send(in *gowon.Message) (out *gowon.Message) {
 		Nick:    in.Nick,
 		Dest:    in.Dest,
 		Command: ic.Command,
-		Args:    "",
+		Args:    in.Args,
 	}
+}
+
+func (ic *InternalCommand) GetHelp() string {
+	if ic.Help != "" {
+		return fmt.Sprintf("{cyan}%s{clear}: %s", ic.Command, ic.Help)
+	}
+
+	return fmt.Sprintf("{cyan}%s{clear}: no help found", ic.Command)
 }
 
 func (ic *InternalCommand) GetCommand() string {
@@ -112,16 +148,18 @@ func (cr *CommandRouter) Add(cmd *Command) {
 	new := &HttpCommand{
 		Command:  cmd.Command,
 		Endpoint: cmd.Endpoint,
-		Priority: cmd.Priority,
 		Regex:    cmd.Regex,
+		Help:     cmd.Help,
+		Priority: cmd.Priority,
 	}
 
 	cr.Commands = append(cr.Commands, new)
 }
 
-func (cr *CommandRouter) AddInternal(command string, f func(in *gowon.Message) string) {
+func (cr *CommandRouter) AddInternal(command, help string, f func(in *gowon.Message) string) {
 	new := &InternalCommand{
 		Command:  command,
+		Help:     help,
 		Priority: -99,
 		f:        f,
 	}
@@ -129,7 +167,7 @@ func (cr *CommandRouter) AddInternal(command string, f func(in *gowon.Message) s
 	cr.Commands = append(cr.Commands, new)
 }
 
-func (cr *CommandRouter) Sort() {
+func (cr *CommandRouter) SortPriority() {
 	sort.Slice(cr.Commands, func(i, j int) bool {
 		return cr.Commands[i].GetPriority() < cr.Commands[j].GetPriority()
 	})
@@ -176,6 +214,17 @@ func colourList(in []string) (out []string) {
 
 func createHelpCommandFunc(cr *CommandRouter) func(in *gowon.Message) string {
 	return func(in *gowon.Message) string {
+		if in.Args != "" {
+			cmd := strings.Fields(in.Args)[0]
+
+			command, err := cr.Route("." + cmd)
+			if err != nil {
+				return fmt.Sprintf("{cyan}%s{clear}: command not found", cmd)
+			}
+
+			return command.GetHelp()
+		}
+
 		return strings.Join(colourList(cr.Names()), ", ")
 	}
 }
