@@ -8,18 +8,18 @@ import (
 )
 
 func TestCommandRouterAdd(t *testing.T) {
-	cr := CommandRouter{}
+	cr := &CommandRouter{}
 	cmd := &Command{Command: "command"}
 	cr.Add(cmd)
 
-	assert.Equal(t, "command", cr.Commands[0].Command)
+	assert.Equal(t, "command", cr.Commands[0].GetCommand())
 }
 
 func createCommandRouterFromPriorities(in []int) *CommandRouter {
 	cr := CommandRouter{}
 
 	for _, i := range in {
-		cmd := &RouterCommand{
+		cmd := &HttpCommand{
 			Command:  fmt.Sprintf("command%d", i),
 			Priority: i,
 		}
@@ -68,14 +68,43 @@ func createCommandRouterFromNames(in []string) *CommandRouter {
 	cr := CommandRouter{}
 
 	for _, i := range in {
-		cmd := &RouterCommand{Command: i}
+		cmd := &HttpCommand{Command: i}
 		cr.Commands = append(cr.Commands, cmd)
 	}
 
 	return &cr
 }
 
-func TestConfigRoute(t *testing.T) {
+func TestCommandRouterNames(t *testing.T) {
+	cases := map[string]struct {
+		commands []string
+		expected []string
+	}{
+		"needs sorting": {
+			commands: []string{"def", "abc", "ghi"},
+			expected: []string{"abc", "def", "ghi"},
+		},
+		"already sorted": {
+			commands: []string{"abc", "def", "ghi"},
+			expected: []string{"abc", "def", "ghi"},
+		},
+		"no commands": {
+			commands: []string{},
+			expected: []string{},
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			cr := createCommandRouterFromNames(tc.commands)
+			out := cr.Names()
+
+			assert.Equal(t, tc.expected, out)
+		})
+	}
+}
+
+func TestCommandRouterRoute(t *testing.T) {
 	cases := map[string]struct {
 		commands  []string
 		command   string
@@ -115,12 +144,12 @@ func TestConfigRoute(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			cfg := createCommandRouterFromNames(tc.commands)
+			cr := createCommandRouterFromNames(tc.commands)
 
-			out, err := cfg.Route(tc.command)
+			out, err := cr.Route(tc.command)
 
 			if !tc.returnErr {
-				assert.Equal(t, tc.command, out.Command)
+				assert.Equal(t, tc.command, out.GetCommand())
 			} else {
 				assert.Equal(t, err.Error(), noCommandRoutedErrMsg)
 			}

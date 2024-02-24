@@ -87,6 +87,8 @@ func main() {
 	cr := &CommandRouter{}
 	cr.Add(c1)
 	cr.Add(c2)
+	cr.AddInternal("help", createHelpCommandFunc(cr))
+	cr.AddInternal("commands", createHelpCommandFunc(cr))
 
 	privMsgHandler := createIrcHandler(&irccon, cr)
 	irccon.AddCallback("PRIVMSG", privMsgHandler)
