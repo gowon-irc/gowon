@@ -82,11 +82,10 @@ func main() {
 		}
 	})
 
-	c1 := &Command{Command: "c1"}
-	c2 := &Command{Command: "c2"}
 	cr := &CommandRouter{}
-	cr.Add(c1)
-	cr.Add(c2)
+	for _, c := range cfg.Commands {
+		cr.Add(&c)
+	}
 	cr.AddInternal("help", createHelpCommandFunc(cr))
 	cr.AddInternal("commands", createHelpCommandFunc(cr))
 
