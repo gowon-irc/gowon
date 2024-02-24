@@ -16,9 +16,21 @@ func TestHttpCommandMatch(t *testing.T) {
 	}{
 		"command match": {
 			command: "command",
-			regex:   "",
+			regex:   ``,
 			text:    ".command",
 			matched: true,
+		},
+		"regex match": {
+			command: "none",
+			regex:   `.*regex.*`,
+			text:    "look for regex in message",
+			matched: true,
+		},
+		"no match": {
+			command: "command",
+			regex:   `.*regex.*`,
+			text:    "random message",
+			matched: false,
 		},
 	}
 

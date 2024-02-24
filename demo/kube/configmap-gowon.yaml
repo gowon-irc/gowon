@@ -6,9 +6,9 @@ metadata:
 data:
   config.yaml: |
     commands:
-      - command: cyan
-        endpoint: http://module4:8080/message
-        help: make text cyan
+      - command: cap
+        endpoint: http://module1:8080/message
+        help: capitalise message
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -18,10 +18,14 @@ data:
   config2.yaml: |
     commands:
       - command: rev
-        endpoint: http://module5:8080
+        endpoint: http://module2:8080/message
         help: reverse text
 
+      - command: cyan
+        endpoint: http://module3:8080/message
+        help: make text cyan
+
       - command: regextest
-        endpoint: http://module6:8080
-        regex: '.*goodbye.*'
+        endpoint: http://module4:8080/message
+        regex: '.*hello.*'
         help: hello more like goodbye

@@ -55,6 +55,10 @@ func createIrcHandler(irccon *ircevent.Connection, cr *CommandRouter) func(event
 
 		output := rc.Send(m)
 
+		if output == nil {
+			return
+		}
+
 		for _, line := range strings.Split(output.Msg, "\n") {
 			coloured := colourMsg(line)
 			for _, sm := range splitMsg(coloured, 400) {

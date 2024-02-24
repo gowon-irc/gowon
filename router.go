@@ -3,11 +3,13 @@ package main
 import (
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"sort"
 	"strings"
 
 	"github.com/gowon-irc/go-gowon"
+	"github.com/imroc/req/v3"
 )
 
 const (
@@ -23,19 +25,31 @@ type RouterCommand interface {
 
 type HttpCommand struct {
 	Command  string
+	Endpoint string
 	Regex    string
 	Priority int
 }
 
-func (hc *HttpCommand) Send(in *gowon.Message) (out *gowon.Message) {
-	return &gowon.Message{
-		Module:  hc.Command,
-		Msg:     fmt.Sprintf("message from %s", hc.Command),
-		Nick:    "tester",
-		Dest:    "#gowon",
-		Command: ".test",
-		Args:    "command",
+func (hc *HttpCommand) Send(in *gowon.Message) *gowon.Message {
+	var out gowon.Message
+
+	client := req.C()
+	resp, err := client.R().
+		SetBody(in).
+		SetSuccessResult(&out).
+		Post(hc.Endpoint)
+
+	if err != nil {
+		log.Println(err)
+		return nil
 	}
+
+	if !resp.IsSuccessState() {
+		log.Printf("Command %s returned an unsuccessful response: %s", in.Command, resp.Status)
+		return nil
+	}
+
+	return &out
 }
 
 func (hc *HttpCommand) GetCommand() string {
@@ -97,6 +111,7 @@ type CommandRouter struct {
 func (cr *CommandRouter) Add(cmd *Command) {
 	new := &HttpCommand{
 		Command:  cmd.Command,
+		Endpoint: cmd.Endpoint,
 		Priority: cmd.Priority,
 		Regex:    cmd.Regex,
 	}
