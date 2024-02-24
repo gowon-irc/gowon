@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/flowchartsman/retry"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
@@ -58,17 +57,6 @@ func main() {
 		os.Exit(1)
 	}
 
-	mqttOpts := mqtt.NewClientOptions()
-	mqttOpts.AddBroker(fmt.Sprintf("tcp://%s", cfg.Broker))
-	mqttOpts.SetClientID("gowon")
-	mqttOpts.SetConnectRetry(true)
-	mqttOpts.SetConnectRetryInterval(mqttConnectRetryInternal * time.Second)
-	mqttOpts.SetAutoReconnect(true)
-
-	mqttOpts.DefaultPublishHandler = defaultPublishHandler
-	mqttOpts.OnConnectionLost = onConnectionLostHandler
-	mqttOpts.OnReconnecting = onRecconnectingHandler
-
 	irccon := ircevent.Connection{
 		Server:      cfg.Server,
 		Nick:        cfg.Nick,
@@ -100,18 +88,6 @@ func main() {
 		}
 	})
 
-	mqttOpts.OnConnect = createOnConnectHandler(&irccon, cfg.TopicRoot)
-	c := mqtt.NewClient(mqttOpts)
-
-	privMsgHandler := createIRCHandler(c, cfg.TopicRoot+"/input")
-	irccon.AddCallback("PRIVMSG", privMsgHandler)
-
-	ircRawHandler := createIRCHandler(c, cfg.TopicRoot+"/raw/input")
-	// irccon.AddCallback("*", ircRawHandler)
-	for _, c := range []string{"JOIN", "332", "353"} {
-		irccon.AddCallback(c, ircRawHandler)
-	}
-
 	httpRouter := gin.Default()
 	httpRouter.POST("/message", createHttpHandler(&irccon))
 
@@ -123,10 +99,6 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if token := c.Connect(); token.Wait() && token.Error() != nil {
-		panic(token.Error())
-	}
-
 	go func() {
 		if err := httpRouter.Run(fmt.Sprintf("0.0.0.0:%d", cfg.HttpPort)); err != nil {
 			log.Fatal(err)
@@ -135,7 +107,5 @@ func main() {
 
 	irccon.Loop()
 
-	log.Println("exiting")
-	c.Disconnect(mqttDisconnectTimeout)
 	log.Println("shutdown complete")
 }
