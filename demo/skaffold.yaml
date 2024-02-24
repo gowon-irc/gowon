@@ -19,28 +19,16 @@ build:
             - "*.go"
           ignore:
             - "*_test.go"
-    # - image: module2
-    #   context: module2
-    #   docker:
-    #     dockerfile: Dockerfile
+    - image: module2
+      context: module2
+      ko:
+        dependencies:
+          paths:
+            - "*.go"
+          ignore:
+            - "*_test.go"
     - image: module3
       context: module3
-      ko:
-        dependencies:
-          paths:
-            - "*.go"
-          ignore:
-            - "*_test.go"
-    - image: module4
-      context: module4
-      ko:
-        dependencies:
-          paths:
-            - "*.go"
-          ignore:
-            - "*_test.go"
-    - image: module5
-      context: module5
       ko:
         dependencies:
           paths:

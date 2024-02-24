@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -10,8 +9,16 @@ import (
 )
 
 const (
-	moduleName = "module3"
+	moduleName = "module2"
 )
+
+func reverse(s string) string {
+	runes := []rune(s)
+	for i, j := 0, len(runes)-1; i < j; i, j = i+1, j-1 {
+		runes[i], runes[j] = runes[j], runes[i]
+	}
+	return string(runes)
+}
 
 func main() {
 	r := gin.Default()
@@ -25,7 +32,7 @@ func main() {
 
 		returnMsg := &gowon.Message{
 			Module: moduleName,
-			Msg:    fmt.Sprintf("{cyan}%s{clear}", msg.Args),
+			Msg:    reverse(msg.Args),
 			Dest:   msg.Dest,
 		}
 

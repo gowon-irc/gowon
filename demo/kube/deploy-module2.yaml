@@ -2,23 +2,23 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: module5
+  name: module2
   labels:
-    app.kubernetes.io/name: module5
+    app.kubernetes.io/name: module2
 spec:
   strategy:
     type: Recreate
   selector:
     matchLabels:
-      app.kubernetes.io/name: module5
+      app.kubernetes.io/name: module2
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: module5
+        app.kubernetes.io/name: module2
     spec:
       containers:
-        - name: module5
-          image: module5
+        - name: module2
+          image: module2
           ports:
             - containerPort: 8080
               name: http

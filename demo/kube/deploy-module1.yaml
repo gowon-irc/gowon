@@ -6,6 +6,8 @@ metadata:
   labels:
     app.kubernetes.io/name: module1
 spec:
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app.kubernetes.io/name: module1
@@ -17,6 +19,6 @@ spec:
       containers:
         - name: module1
           image: module1
-          env:
-            - name: GOWON_BROKER
-              value: mosquitto:1883
+          ports:
+            - containerPort: 8080
+              name: http

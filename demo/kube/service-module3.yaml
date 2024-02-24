@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: module4
+  name: module3
 spec:
   selector:
-    app.kubernetes.io/name: module4
+    app.kubernetes.io/name: module3
   ports:
     - name: http
       port: 8080

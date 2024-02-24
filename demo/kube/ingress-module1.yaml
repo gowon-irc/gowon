@@ -2,16 +2,16 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: module5
+  name: module1
 spec:
   rules:
-    - host: module5.gowon.io
+    - host: module1.gowon.io
       http:
         paths:
           - path: /
             pathType: Prefix
             backend:
               service:
-                name: module5
+                name: module1
                 port:
                   name: http
