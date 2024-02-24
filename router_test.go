@@ -7,6 +7,34 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestHttpCommandMatch(t *testing.T) {
+	cases := map[string]struct {
+		command string
+		regex   string
+		text    string
+		matched bool
+	}{
+		"command match": {
+			command: "command",
+			regex:   "",
+			text:    ".command",
+			matched: true,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			cmd := &HttpCommand{
+				Command: tc.command,
+				Regex:   tc.regex,
+			}
+
+			matched := cmd.Match(tc.text)
+			assert.Equal(t, tc.matched, matched)
+		})
+	}
+}
+
 func TestCommandRouterAdd(t *testing.T) {
 	cr := &CommandRouter{}
 	cmd := &Command{Command: "command"}
@@ -64,17 +92,6 @@ func TestCommandRouterSort(t *testing.T) {
 	}
 }
 
-func createCommandRouterFromNames(in []string) *CommandRouter {
-	cr := CommandRouter{}
-
-	for _, i := range in {
-		cmd := &HttpCommand{Command: i}
-		cr.Commands = append(cr.Commands, cmd)
-	}
-
-	return &cr
-}
-
 func TestCommandRouterNames(t *testing.T) {
 	cases := map[string]struct {
 		commands []string
@@ -96,7 +113,10 @@ func TestCommandRouterNames(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			cr := createCommandRouterFromNames(tc.commands)
+			cr := &CommandRouter{}
+			for _, c := range tc.commands {
+				cr.Add(&Command{Command: c})
+			}
 			out := cr.Names()
 
 			assert.Equal(t, tc.expected, out)
@@ -144,9 +164,13 @@ func TestCommandRouterRoute(t *testing.T) {
 
 	for name, tc := range cases {
 		t.Run(name, func(t *testing.T) {
-			cr := createCommandRouterFromNames(tc.commands)
+			cr := &CommandRouter{}
+			for _, c := range tc.commands {
+				cmd := Command{Command: c}
+				cr.Add(&cmd)
+			}
 
-			out, err := cr.Route(tc.command)
+			out, err := cr.Route("." + tc.command)
 
 			if !tc.returnErr {
 				assert.Equal(t, tc.command, out.GetCommand())

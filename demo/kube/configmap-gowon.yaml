@@ -20,3 +20,8 @@ data:
       - command: rev
         endpoint: http://module5:8080
         help: reverse text
+
+      - command: regextest
+        endpoint: http://module6:8080
+        regex: '.*goodbye.*'
+        help: hello more like goodbye

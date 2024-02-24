@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"sort"
 	"strings"
 
@@ -17,10 +18,12 @@ type RouterCommand interface {
 	Send(in *gowon.Message) *gowon.Message
 	GetCommand() string
 	GetPriority() int
+	Match(string) bool
 }
 
 type HttpCommand struct {
 	Command  string
+	Regex    string
 	Priority int
 }
 
@@ -41,6 +44,19 @@ func (hc *HttpCommand) GetCommand() string {
 
 func (hc *HttpCommand) GetPriority() int {
 	return hc.Priority
+}
+
+func (hc *HttpCommand) Match(text string) bool {
+	if hc.Command == gowon.GetCommand(text) {
+		return true
+	}
+
+	if hc.Regex != "" {
+		re := regexp.MustCompile(hc.Regex)
+		return re.Match([]byte(text))
+	}
+
+	return false
 }
 
 type InternalCommand struct {
@@ -68,6 +84,10 @@ func (ic *InternalCommand) GetPriority() int {
 	return ic.Priority
 }
 
+func (ic *InternalCommand) Match(text string) bool {
+	return ic.Command == gowon.GetCommand(text)
+}
+
 type CommandRouter struct {
 	Commands []RouterCommand
 }
@@ -76,6 +96,7 @@ func (cr *CommandRouter) Add(cmd *Command) {
 	new := &HttpCommand{
 		Command:  cmd.Command,
 		Priority: cmd.Priority,
+		Regex:    cmd.Regex,
 	}
 
 	cr.Commands = append(cr.Commands, new)
@@ -111,14 +132,14 @@ func (cr *CommandRouter) Names() []string {
 	return out
 }
 
-func (cr *CommandRouter) Route(command string) (cmd RouterCommand, err error) {
+func (cr *CommandRouter) Route(text string) (RouterCommand, error) {
 	for _, cmd := range cr.Commands {
-		if command == cmd.GetCommand() {
+		if cmd.Match(text) {
 			return cmd, nil
 		}
 	}
 
-	return cmd, errors.New(noCommandRoutedErrMsg)
+	return nil, errors.New(noCommandRoutedErrMsg)
 }
 
 func colourList(in []string) (out []string) {

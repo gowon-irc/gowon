@@ -48,7 +48,7 @@ func createIrcHandler(irccon *ircevent.Connection, cr *CommandRouter) func(event
 			Args:      args,
 		}
 
-		rc, err := cr.Route(command)
+		rc, err := cr.Route(msg)
 		if err != nil {
 			return
 		}

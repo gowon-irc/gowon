@@ -18,6 +18,7 @@ const (
 type Command struct {
 	Command  string `validate:"alphanum"`
 	Endpoint string `validate:"url"`
+	Regex    string
 	Help     string
 	Priority int
 }
