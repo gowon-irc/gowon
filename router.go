@@ -2,16 +2,33 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"sort"
+
+	"github.com/gowon-irc/go-gowon"
 )
 
 const (
 	noCommandRoutedErrMsg = "no command could be routed"
 )
 
+type Message struct {
+}
+
 type RouterCommand struct {
 	Command  string
 	Priority int
+}
+
+func (rc *RouterCommand) Send(in *gowon.Message) (out *gowon.Message) {
+	return &gowon.Message{
+		Module:  rc.Command,
+		Msg:     fmt.Sprintf("message from %s", rc.Command),
+		Nick:    "tester",
+		Dest:    "#gowon",
+		Command: ".test",
+		Args:    "command",
+	}
 }
 
 type CommandRouter struct {

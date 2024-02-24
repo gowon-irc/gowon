@@ -1,20 +1,17 @@
 package main
 
 import (
-	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"strings"
 
-	mqtt "github.com/eclipse/paho.mqtt.golang"
 	"github.com/ergochat/irc-go/ircevent"
 	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/gin-gonic/gin"
 	"github.com/gowon-irc/go-gowon"
 )
 
-func createIRCHandler(c mqtt.Client, topic string) func(event ircmsg.Message) {
+func createIrcHandler(irccon *ircevent.Connection, cr *CommandRouter) func(event ircmsg.Message) {
 	return func(event ircmsg.Message) {
 		nuh, err := ircmsg.ParseNUH(event.Source)
 		if err != nil {
@@ -50,14 +47,23 @@ func createIRCHandler(c mqtt.Client, topic string) func(event ircmsg.Message) {
 			Command:   command,
 			Args:      args,
 		}
-		mj, err := json.Marshal(m)
-		if err != nil {
-			log.Println(err)
 
+		rc, err := cr.Route(command)
+		if err != nil {
 			return
 		}
 
-		c.Publish(topic, 0, false, mj)
+		output := rc.Send(m)
+
+		for _, line := range strings.Split(output.Msg, "\n") {
+			coloured := colourMsg(line)
+			for _, sm := range splitMsg(coloured, 400) {
+				err := irccon.Privmsg(output.Dest, sm)
+				if err != nil {
+					log.Println(err)
+				}
+			}
+		}
 	}
 }
 
@@ -72,64 +78,13 @@ func createHttpHandler(irccon *ircevent.Connection) func(*gin.Context) {
 		for _, line := range strings.Split(m.Msg, "\n") {
 			coloured := colourMsg(line)
 			for _, sm := range splitMsg(coloured, 400) {
-				irccon.Privmsg(m.Dest, sm)
+				err := irccon.Privmsg(m.Dest, sm)
+				if err != nil {
+					log.Println(err)
+				}
 			}
 		}
 
 		c.IndentedJSON(http.StatusCreated, m)
-	}
-}
-
-func createMessageHandler(irccon *ircevent.Connection) mqtt.MessageHandler {
-	return func(client mqtt.Client, msg mqtt.Message) {
-		m, err := gowon.CreateMessageStruct(msg.Payload())
-		if err != nil {
-			log.Print(err)
-
-			return
-		}
-
-		for _, line := range strings.Split(m.Msg, "\n") {
-			coloured := colourMsg(line)
-			for _, sm := range splitMsg(coloured, 400) {
-				irccon.Privmsg(m.Dest, sm)
-			}
-		}
-	}
-}
-
-func createSendRawHandler(irccon *ircevent.Connection) mqtt.MessageHandler {
-	return func(client mqtt.Client, msg mqtt.Message) {
-		irccon.SendRaw(string(msg.Payload()))
-	}
-}
-
-func defaultPublishHandler(c mqtt.Client, msg mqtt.Message) {
-	log.Printf("unexpected message:  %s\n", msg)
-}
-
-func onConnectionLostHandler(c mqtt.Client, err error) {
-	log.Println("connection to broker lost")
-}
-
-func onRecconnectingHandler(c mqtt.Client, opts *mqtt.ClientOptions) {
-	log.Println("attempting to reconnect to broker")
-}
-
-func createOnConnectHandler(irccon *ircevent.Connection, topicRoot string) func(mqtt.Client) {
-	log.Println("connected to broker")
-
-	topic := topicRoot + "/output"
-	rawTopic := topicRoot + "/raw/output"
-
-	mh := createMessageHandler(irccon)
-	rh := createSendRawHandler(irccon)
-
-	return func(client mqtt.Client) {
-		client.Subscribe(topic, 0, mh)
-		log.Printf(fmt.Sprintf("Subscription to %s complete", topic))
-
-		client.Subscribe(rawTopic, 0, rh)
-		log.Printf(fmt.Sprintf("Subscription to %s complete", rawTopic))
 	}
 }

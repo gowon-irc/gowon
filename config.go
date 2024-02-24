@@ -31,9 +31,7 @@ type Config struct {
 	UseTLS    bool     `short:"T" long:"tls" env:"GOWON_TLS" description:"Connect to irc server using tls"`
 	Verbose   bool     `short:"v" long:"verbose" env:"GOWON_VERBOSE" description:"Verbose logging"`
 	Debug     bool     `short:"d" long:"debug" env:"GOWON_DEBUG" description:"Debug logging"`
-	Broker    string   `short:"b" long:"broker" env:"GOWON_BROKER" default:"localhost:1883" description:"mqtt broker" validate:"hostname_port"`
-	TopicRoot string   `short:"t" long:"topic-root" env:"GOWON_TOPIC_ROOT" default:"/gowon" description:"mqtt topic root"`
-	HttpPort  int      `short:"H" long:"http-port" env:"GOWON_HTTP_PORT" default:"8080" description:"http port" validate:"min=1,max=65535"`
+	HttpPort  int      `short:"P" long:"http-port" env:"GOWON_HTTP_PORT" default:"8080" description:"http port" validate:"min=1,max=65535"`
 	ConfigDir string   `short:"C" long:"config-dir" env:"GOWON_CONFIG_DIR" default:"." description:"config directory"`
 
 	Commands []Command `validate:"dive"`

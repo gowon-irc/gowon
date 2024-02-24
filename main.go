@@ -17,12 +17,6 @@ import (
 	"github.com/ergochat/irc-go/ircmsg"
 )
 
-const (
-	mqttConnectRetryInternal = 5
-	mqttDisconnectTimeout    = 1000
-	configFilename           = "config.yaml"
-)
-
 var validate *validator.Validate
 
 func main() {
@@ -87,6 +81,15 @@ func main() {
 			}
 		}
 	})
+
+	c1 := &Command{Command: "c1"}
+	c2 := &Command{Command: "c2"}
+	cr := &CommandRouter{}
+	cr.Add(c1)
+	cr.Add(c2)
+
+	privMsgHandler := createIrcHandler(&irccon, cr)
+	irccon.AddCallback("PRIVMSG", privMsgHandler)
 
 	httpRouter := gin.Default()
 	httpRouter.POST("/message", createHttpHandler(&irccon))
