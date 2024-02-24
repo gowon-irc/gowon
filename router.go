@@ -62,13 +62,15 @@ func (hc *HttpCommand) Match(text string) bool {
 type InternalCommand struct {
 	Command  string
 	Priority int
-	f        func() string
+	f        func(in *gowon.Message) string
 }
 
 func (ic *InternalCommand) Send(in *gowon.Message) (out *gowon.Message) {
+	msg := ic.f(in)
+
 	return &gowon.Message{
 		Module:  ic.Command,
-		Msg:     ic.f(),
+		Msg:     msg,
 		Nick:    in.Nick,
 		Dest:    in.Dest,
 		Command: ic.Command,
@@ -102,7 +104,7 @@ func (cr *CommandRouter) Add(cmd *Command) {
 	cr.Commands = append(cr.Commands, new)
 }
 
-func (cr *CommandRouter) AddInternal(command string, f func() string) {
+func (cr *CommandRouter) AddInternal(command string, f func(in *gowon.Message) string) {
 	new := &InternalCommand{
 		Command:  command,
 		Priority: -99,
@@ -157,8 +159,8 @@ func colourList(in []string) (out []string) {
 	return out
 }
 
-func createHelpCommandFunc(cr *CommandRouter) func() string {
-	return func() string {
+func createHelpCommandFunc(cr *CommandRouter) func(in *gowon.Message) string {
+	return func(in *gowon.Message) string {
 		return strings.Join(colourList(cr.Names()), ", ")
 	}
 }
