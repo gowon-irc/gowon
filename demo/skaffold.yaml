@@ -43,6 +43,14 @@ build:
             - "*.go"
           ignore:
             - "*_test.go"
+    - image: module5
+      context: module5
+      ko:
+        dependencies:
+          paths:
+            - "*.go"
+          ignore:
+            - "*_test.go"
 deploy:
   kubectl:
     manifests:

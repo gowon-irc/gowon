@@ -39,16 +39,26 @@ func (hc *HttpCommand) Send(in *gowon.Message) *gowon.Message {
 	resp, err := client.R().
 		SetBody(in).
 		SetSuccessResult(&out).
+		SetErrorResult(&out).
 		Post(hc.Endpoint + "/message")
 
 	if err != nil {
 		log.Println(err)
-		return nil
+		in.Msg = fmt.Sprintf("{red}Error: request to %s failed{clear}", in.Command)
+		return in
 	}
 
 	if !resp.IsSuccessState() {
 		log.Printf("Command %s returned an unsuccessful response: %s", in.Command, resp.Status)
-		return nil
+
+		msg := out.Msg
+		if msg == "" {
+			msg = fmt.Sprintf("{red}Command %s returned an unsuccessful response: %s{clear}", in.Command, resp.Status)
+		}
+
+		out.Msg = msg
+
+		return &out
 	}
 
 	return &out
