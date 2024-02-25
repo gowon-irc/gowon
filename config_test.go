@@ -176,9 +176,11 @@ func TestConfigManagerMerge(t *testing.T) {
 
 			cm2 := NewConfigManager()
 			_ = cm2.OpenFile(filepath.Join(testDataDir, "merged", tc.mergedfn))
-			expected, _ := cm2.Merge()
+			_ = cm2.Merge()
+			expected := cm2.MergedConfig
 
-			out, err := cm.Merge()
+			err := cm.Merge()
+			out := cm.MergedConfig
 
 			assert.Equal(t, expected, out)
 			assert.Nil(t, err)

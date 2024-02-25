@@ -44,8 +44,9 @@ func validateIrcChannel(field validator.FieldLevel) bool {
 }
 
 type ConfigManager struct {
-	Opts        Config
-	ConfigFiles map[string]Config
+	Opts         Config
+	ConfigFiles  map[string]Config
+	MergedConfig *Config
 }
 
 func NewConfigManager() *ConfigManager {
@@ -56,7 +57,7 @@ func NewConfigManager() *ConfigManager {
 	return &cm
 }
 
-func (c *ConfigManager) OpenFile(filename string) error {
+func (cm *ConfigManager) OpenFile(filename string) error {
 	cfg := Config{}
 
 	_, err := os.Stat(filename)
@@ -74,16 +75,18 @@ func (c *ConfigManager) OpenFile(filename string) error {
 		return err
 	}
 
-	c.ConfigFiles[filename] = cfg
+	cm.ConfigFiles[filename] = cfg
 
 	return nil
 }
 
-func (c *ConfigManager) LoadDirectory(directory string) error {
+func (cm *ConfigManager) LoadDirectory(directory string) error {
+	cm.ConfigFiles = make(map[string]Config)
+
 	files, _ := filepath.Glob(filepath.Join(directory, "*.yaml"))
 
 	for _, file := range files {
-		if err := c.OpenFile(file); err != nil {
+		if err := cm.OpenFile(file); err != nil {
 			return fmt.Errorf("Error: could not open %s", file)
 		}
 	}
@@ -91,22 +94,22 @@ func (c *ConfigManager) LoadDirectory(directory string) error {
 	return nil
 }
 
-func (c *ConfigManager) AddOpts(config Config) {
-	c.Opts = config
+func (cm *ConfigManager) AddOpts(config Config) {
+	cm.Opts = config
 }
 
-func (c *ConfigManager) Merge() (Config, error) {
-	config := Config{}
+func (cm *ConfigManager) Merge() error {
+	cm.MergedConfig = &Config{}
 
-	if err := mergo.Merge(&config, c.Opts, mergo.WithOverride); err != nil {
-		return config, err
+	if err := mergo.Merge(cm.MergedConfig, cm.Opts, mergo.WithOverride); err != nil {
+		return err
 	}
 
-	for _, cfg := range c.ConfigFiles {
-		if err := mergo.Merge(&config, cfg, mergo.WithOverride, mergo.WithAppendSlice); err != nil {
-			return config, err
+	for _, cfg := range cm.ConfigFiles {
+		if err := mergo.Merge(cm.MergedConfig, cfg, mergo.WithOverride, mergo.WithAppendSlice); err != nil {
+			return err
 		}
 	}
 
-	return config, nil
+	return nil
 }
