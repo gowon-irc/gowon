@@ -94,7 +94,7 @@ jobs:
           echo ::set-output name=gitversionf::${GITVERSION_FULLSEMVER/+/-}
 
       - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
+        uses: docker/setup-qemu-action@v3
         with:
           platforms: amd64,arm64
 
