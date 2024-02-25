@@ -86,8 +86,8 @@ func main() {
 	for _, c := range cfg.Commands {
 		cr.Add(&c)
 	}
-	cr.AddInternal("help", "list and describe commands", createHelpCommandFunc(cr))
-	cr.AddInternal("commands", "list and describe commands", createHelpCommandFunc(cr))
+	cr.AddInternal("h", "list and describe commands", createHelpCommandFunc(cr))
+	cr.AddInternal("gowon", "list and describe commands", createHelpCommandFunc(cr))
 	cr.SortPriority()
 
 	privMsgHandler := createIrcHandler(&irccon, cr)
