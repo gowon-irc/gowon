@@ -1,4 +1,5 @@
 ---
+# yaml-language-server: $schema=https://raw.githubusercontent.com/yannh/kubernetes-json-schema/master/v1.27.3-standalone-strict/deployment-apps-v1.json
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -16,6 +17,24 @@ spec:
       labels:
         app.kubernetes.io/name: gowon
     spec:
+      serviceAccountName: gowon
+      initContainers:
+        - name: init-config-sync
+          image: ghcr.io/kiwigrid/k8s-sidecar:1.25.3
+          env:
+            - name: FOLDER
+              value: /config
+            - name: LABEL
+              value: gowon/enabled
+            - name: METHOD
+              value: LIST
+            - name: UNIQUE_FILENAMES
+              value: "true"
+            - name: LOG_LEVEL
+              value: DEBUG
+          volumeMounts:
+            - name: config
+              mountPath: /config
       containers:
         - name: gowon
           image: gowon
@@ -32,20 +51,28 @@ spec:
               value: "#gowon,#gowon2"
             - name: GOWON_CONFIG_DIR
               value: /config
+          volumeMounts:
+            - name: config
+              mountPath: /config
           ports:
             - containerPort: 8080
               name: http
+        - name: config-sync
+          image: ghcr.io/kiwigrid/k8s-sidecar:1.25.3
+          env:
+            - name: FOLDER
+              value: /config/source
+            - name: LABEL
+              value: gowon/enabled
+            - name: METHOD
+              value: WATCH
+            - name: UNIQUE_FILENAMES
+              value: "true"
+            - name: LOG_LEVEL
+              value: DEBUG
           volumeMounts:
             - name: config
-              mountPath: /config/config.yaml
-              subPath: config.yaml
-            - name: config2
-              mountPath: /config/config2.yaml
-              subPath: config2.yaml
+              mountPath: /config
       volumes:
         - name: config
-          configMap:
-            name: gowon-config
-        - name: config2
-          configMap:
-            name: gowon-config2
+          emptyDir: {}
