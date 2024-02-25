@@ -192,3 +192,37 @@ func TestCommandRouterRoute(t *testing.T) {
 		})
 	}
 }
+
+func TestCommandRouterClear(t *testing.T) {
+	cases := map[string]struct {
+		initial int
+	}{
+		"has commands": {
+			initial: 2,
+		},
+		"initially empty": {
+			initial: 0,
+		},
+	}
+
+	for name, tc := range cases {
+		t.Run(name, func(t *testing.T) {
+			cr := &CommandRouter{}
+			for i := 0; i < tc.initial; i++ {
+				cr.Add(&Command{Command: fmt.Sprintf("command%d", i)})
+			}
+			assert.Equal(t, tc.initial, len(cr.Commands))
+
+			cr.Clear()
+			assert.Equal(t, 0, len(cr.Commands))
+
+			cr.Clear()
+			assert.Equal(t, 0, len(cr.Commands))
+
+			for i := 0; i < tc.initial; i++ {
+				cr.Add(&Command{Command: fmt.Sprintf("command%d", i)})
+			}
+			assert.Equal(t, tc.initial, len(cr.Commands))
+		})
+	}
+}

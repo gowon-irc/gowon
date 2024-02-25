@@ -197,6 +197,10 @@ func (cr *CommandRouter) Route(text string) (RouterCommand, error) {
 	return nil, errors.New(noCommandRoutedErrMsg)
 }
 
+func (cr *CommandRouter) Clear() {
+	cr.Commands = nil
+}
+
 func colourList(in []string) (out []string) {
 	out = []string{}
 
