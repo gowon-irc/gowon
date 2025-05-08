@@ -3,7 +3,7 @@ module github.com/gowon-irc/gowon
 go 1.21.4
 
 require (
-	dario.cat/mergo v1.0.0
+	dario.cat/mergo v1.0.2
 	github.com/ergochat/irc-go v0.4.0
 	github.com/flowchartsman/retry v1.2.0
 	github.com/fsnotify/fsnotify v1.7.0
