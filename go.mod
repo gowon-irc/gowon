@@ -4,7 +4,7 @@ go 1.21.4
 
 require (
 	dario.cat/mergo v1.0.0
-	github.com/ergochat/irc-go v0.4.0
+	github.com/ergochat/irc-go v0.7.0
 	github.com/flowchartsman/retry v1.2.0
 	github.com/fsnotify/fsnotify v1.7.0
 	github.com/gin-gonic/gin v1.9.1
