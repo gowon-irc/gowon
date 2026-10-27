@@ -47,8 +47,9 @@ func setupRouter(cm *ConfigManager, cr *CommandRouter, configDir string) error {
 	for _, c := range cfg.Commands {
 		cr.Add(&c)
 	}
-	cr.AddInternal("h", "list and describe commands", createHelpCommandFunc(cr))
-	cr.AddInternal("gowon", "list and describe commands", createHelpCommandFunc(cr))
+	for _, c := range []string{"h", "help", "gowon", "commands"} {
+		cr.AddInternal(c, "list and describe commands", createHelpCommandFunc(cr))
+	}
 	cr.SortPriority()
 
 	return nil
@@ -154,6 +155,10 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	httpRouter.GET("/health", func(c *gin.Context) {
+		c.JSON(http.StatusOK, gin.H{"status": "ok"})
+    })
 
 	go func() {
 		if err := httpRouter.Run(fmt.Sprintf("0.0.0.0:%d", cfg.HttpPort)); err != nil {
