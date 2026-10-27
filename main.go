@@ -4,18 +4,18 @@ import (
 	"crypto/tls"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"strings"
 	"time"
 
+	"github.com/ergochat/irc-go/ircevent"
+	"github.com/ergochat/irc-go/ircmsg"
 	"github.com/flowchartsman/retry"
 	"github.com/fsnotify/fsnotify"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/jessevdk/go-flags"
-
-	"github.com/ergochat/irc-go/ircevent"
-	"github.com/ergochat/irc-go/ircmsg"
 )
 
 var validate *validator.Validate
@@ -158,7 +158,7 @@ func main() {
 
 	httpRouter.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
-    })
+	})
 
 	go func() {
 		if err := httpRouter.Run(fmt.Sprintf("0.0.0.0:%d", cfg.HttpPort)); err != nil {
