@@ -1,12 +1,12 @@
 module github.com/gowon-irc/gowon
 
-go 1.21.4
+go 1.23
 
 require (
 	dario.cat/mergo v1.0.0
 	github.com/ergochat/irc-go v0.4.0
 	github.com/flowchartsman/retry v1.2.0
-	github.com/fsnotify/fsnotify v1.7.0
+	github.com/fsnotify/fsnotify v1.10.1
 	github.com/gin-gonic/gin v1.9.1
 	github.com/go-playground/validator/v10 v10.18.0
 	github.com/gowon-irc/go-gowon v0.0.0-20220719115350-ec869e1addf7
